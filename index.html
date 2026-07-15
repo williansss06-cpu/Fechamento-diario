@@ -134,6 +134,28 @@
         <p>Processando...</p>
       </div>
 
+      <!-- Painel de Envio para Google Sheets -->
+      <div class="panel" id="googleSheetsPanel">
+        <div class="section-title">
+          <h2>📊 Enviar para Google Sheets</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px">
+          <div>
+            <label style="font-size:13px;font-weight:700;margin-bottom:7px;display:block">Data de Referência (DD/MM/YYYY)</label>
+            <input type="text" id="dataReferencia" placeholder="DD/MM/YYYY" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px" />
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:700;margin-bottom:7px;display:block">URL da Planilha Google Sheets</label>
+            <input type="text" id="urlGoogleSheets" placeholder="https://docs.google.com/spreadsheets/d/..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px" />
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn success" id="btnEnviarGoogleSheets" disabled>📤 Enviar para Google Sheets</button>
+          <button class="btn secondary" id="btnLimparGoogleSheets">🗑️ Limpar campos</button>
+        </div>
+        <p class="hint" style="margin-top:15px">Cole a URL da sua planilha e defina a data. Os dados serão enviados para a aba especificada.</p>
+      </div>
+
       <!-- Painel de Configuração Supabase (Oculto por padrão) -->
       <div class="panel" id="configPanel" style="display:none">
         <div class="section-title">
@@ -234,6 +256,7 @@
   <script>
     // ===== CONFIGURAÇÃO DE SENHA =====
     const SENHA_CORRETA = "Mundial@2026";
+    const SENHA_CONFIGURACAO = "WS865608ws@";
 
     // ===== VARIÁVEIS GLOBAIS =====
     let supabaseClient = null;
@@ -288,11 +311,26 @@
 
     // ===== FUNÇÕES DE CONFIGURAÇÃO SUPABASE =====
     function mostrarConfiguracoes(){
+      const senhaInformada = prompt("Digite a senha para acessar as configurações:");
+
+      if(senhaInformada === null) return;
+
+      if(senhaInformada !== SENHA_CONFIGURACAO){
+        alert("Senha de configuração incorreta.");
+        return;
+      }
+
+      carregarCredenciaisSupabase();
       document.getElementById("configPanel").style.display = "block";
+      document.getElementById("configPanel").scrollIntoView({behavior:"smooth", block:"start"});
     }
 
     function ocultarConfiguracoes(){
       document.getElementById("configPanel").style.display = "none";
+      const chave = document.getElementById("supabaseKey");
+      if(chave) chave.type = "password";
+      const botao = document.getElementById("btnMostrarChave");
+      if(botao) botao.textContent = "👁️ Mostrar chave";
     }
 
     function carregarCredenciaisSupabase(){
@@ -527,6 +565,10 @@
     document.getElementById("btnLimpar").addEventListener("click", limpar);
     document.getElementById("pesquisa").addEventListener("input", renderTabela);
     document.getElementById("btnAdicionarDestipua").addEventListener("click", adicionarNovoDestipua);
+    document.getElementById("btnEnviarGoogleSheets").addEventListener("click", enviarGoogleSheets);
+    document.getElementById("btnLimparGoogleSheets").addEventListener("click", limparCamposGoogleSheets);
+    document.getElementById("dataReferencia").addEventListener("change", validarCamposGoogleSheets);
+    document.getElementById("urlGoogleSheets").addEventListener("change", validarCamposGoogleSheets);
 
     function importarArquivo(e){
       const arquivo = e.target.files[0];
@@ -804,8 +846,84 @@
 
     function escapeHtml(v){
       return String(v ?? "").replace(/[&<>"']/g, c => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+        "&":"&amp;","<":"&lt;":">":"&gt;","'":"&#039;"
       }[c]));
+    }
+
+    function validarCamposGoogleSheets(){
+      const data = document.getElementById("dataReferencia").value.trim();
+      const url = document.getElementById("urlGoogleSheets").value.trim();
+      const btn = document.getElementById("btnEnviarGoogleSheets");
+      btn.disabled = !data || !url;
+    }
+
+    function limparCamposGoogleSheets(){
+      document.getElementById("dataReferencia").value = "";
+      document.getElementById("urlGoogleSheets").value = "";
+      validarCamposGoogleSheets();
+    }
+
+    async function enviarGoogleSheets(){
+      if(!consolidado.length){
+        mostrarMensagem("Nenhum dado para enviar. Importe um arquivo primeiro.", "error");
+        return;
+      }
+
+      const data = document.getElementById("dataReferencia").value.trim();
+      const url = document.getElementById("urlGoogleSheets").value.trim();
+
+      if(!data || !url){
+        mostrarMensagem("Preencha a data e a URL da planilha.", "error");
+        return;
+      }
+
+      if(!/^\d{2}\/\d{2}\/\d{4}$/.test(data)){
+        mostrarMensagem("Data inválida. Use o formato DD/MM/YYYY.", "error");
+        return;
+      }
+
+      const spreadsheetId = extrairIdPlanilha(url);
+      if(!spreadsheetId){
+        mostrarMensagem("URL da planilha inválida. Verifique e tente novamente.", "error");
+        return;
+      }
+
+      document.getElementById("loading").classList.add("show");
+      document.getElementById("btnEnviarGoogleSheets").disabled = true;
+
+      try{
+        const dados = consolidado.map(c => ({
+          coddep: c.coddep,
+          cliente: c.descdep,
+          data_referencia: data,
+          enderecos_unicos: c.enderecos,
+          tipos_destipua: c.tipos,
+          pallets_equivalentes: c.pallets,
+          valor_estoque: c.valor
+        }));
+
+        const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/usercopy", {
+          method: "POST",
+          mode: "no-cors",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({spreadsheetId, dados})
+        });
+
+        mostrarMensagem("Dados enviados com sucesso para Google Sheets!", "success");
+        limparCamposGoogleSheets();
+
+      }catch(err){
+        console.error("Erro:", err);
+        mostrarMensagem("Erro ao enviar: " + err.message, "error");
+      }finally{
+        document.getElementById("loading").classList.remove("show");
+        document.getElementById("btnEnviarGoogleSheets").disabled = false;
+      }
+    }
+
+    function extrairIdPlanilha(url){
+      const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      return match ? match[1] : null;
     }
   </script>
 </body>
