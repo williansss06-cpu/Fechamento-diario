@@ -236,7 +236,7 @@
     const SENHA_CORRETA = "Mundial@2026";
 
     // ===== VARIÁVEIS GLOBAIS =====
-    let supabase = null;
+    let supabaseClient = null;
     let linhas = [];
     let consolidado = [];
     let fatores = {};
@@ -278,9 +278,12 @@
 
     // Permitir Enter para login
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("passwordInput").addEventListener("keypress", (e) => {
-        if(e.key === "Enter") verificarSenha();
-      });
+      const pwd = document.getElementById("passwordInput");
+      if(pwd) {
+        pwd.addEventListener("keypress", (e) => {
+          if(e.key === "Enter") verificarSenha();
+        });
+      }
     });
 
     // ===== FUNÇÕES DE CONFIGURAÇÃO SUPABASE =====
@@ -347,7 +350,7 @@
         
         if(error) throw error;
         
-        supabase = testClient;
+        supabaseClient = testClient;
         supabaseConnected = true;
         mostrarSupabaseStatus("✅ Conectado com sucesso!", "connected");
         await carregarConfiguracoes();
@@ -369,8 +372,8 @@
       }
 
       try {
-        supabase = window.supabase.createClient(url, key);
-        const { error } = await supabase.from("configuracao_pallets").select("count");
+        supabaseClient = window.supabase.createClient(url, key);
+        const { error } = await supabaseClient.from("configuracao_pallets").select("count");
         
         if(error) throw error;
         
@@ -388,7 +391,7 @@
       if(!supabaseConnected) return;
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from("configuracao_pallets")
           .select("destipua, fator")
           .order("destipua");
@@ -415,7 +418,7 @@
       }
 
       try {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from("configuracao_pallets")
           .upsert({ destipua, fator }, { onConflict: "destipua" });
 
@@ -437,7 +440,7 @@
       if(!confirm(`Deletar "${destipua}"?`)) return;
 
       try {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from("configuracao_pallets")
           .delete()
           .eq("destipua", destipua);
