@@ -12,9 +12,26 @@
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-    .topbar{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:22px 28px}
-    .topbar h1{margin:0 0 6px;font-size:25px}
-    .topbar p{margin:0;opacity:.88}
+    
+    /* Login Screen */
+    .login-container{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;z-index:9999}
+    .login-container.hidden{display:none}
+    .login-box{background:white;border-radius:16px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:100%;text-align:center}
+    .login-box h1{margin:0 0 10px;font-size:28px;color:var(--primary)}
+    .login-box p{margin:0 0 30px;color:var(--muted);font-size:14px}
+    .login-box input{width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:16px;margin-bottom:15px}
+    .login-box input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(18,59,99,0.1)}
+    .login-box button{width:100%;padding:12px;background:var(--primary);color:white;border:0;border-radius:8px;font-weight:700;cursor:pointer;font-size:16px}
+    .login-box button:hover{background:var(--primary2)}
+    .login-error{color:#dc3545;font-size:13px;margin-top:10px;display:none}
+    
+    .topbar{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:22px 28px;display:flex;justify-content:space-between;align-items:center}
+    .topbar-left h1{margin:0 0 6px;font-size:25px}
+    .topbar-left p{margin:0;opacity:.88}
+    .topbar-right{display:flex;gap:10px;align-items:center}
+    .topbar-right button{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px}
+    .topbar-right button:hover{background:rgba(255,255,255,0.3)}
+    
     .container{max-width:1500px;margin:22px auto;padding:0 18px 40px}
     .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
     .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -25,9 +42,10 @@
     .btn.secondary{background:#e9f0f7;color:var(--primary);border:1px solid #c9d7e5}
     .btn.success{background:var(--ok)}
     .btn.warning{background:#d4a017;color:#fff}
+    .btn.danger{background:#dc3545;color:#fff}
     .btn:disabled{opacity:.45;cursor:not-allowed}
     input[type=file]{display:none}
-    input[type=text],input[type=number],input[type=date]{
+    input[type=text],input[type=password],input[type=number],input[type=date]{
       border:1px solid var(--border);border-radius:8px;padding:10px 11px;background:#fff
     }
     .status{font-size:14px;color:var(--muted);margin-left:auto}
@@ -39,10 +57,12 @@
     .section-title h2{font-size:19px;margin:0}
     .hint{font-size:13px;color:var(--muted);line-height:1.45}
     .config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-    .config-item{border:1px solid var(--border);border-radius:10px;padding:11px;background:#fafcff}
+    .config-item{border:1px solid var(--border);border-radius:10px;padding:11px;background:#fafcff;display:flex;flex-direction:column;justify-content:space-between;position:relative}
     .config-item label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
-    .config-item .row{display:flex;gap:8px;align-items:center}
-    .config-item input{width:110px}
+    .config-item .row{display:flex;gap:8px;align-items:center;margin-top:auto}
+    .config-item input{width:60px;padding:8px}
+    .config-item .btn-delete{position:absolute;top:8px;right:8px;padding:4px 8px;font-size:11px;background:#ff6b6b;color:#fff;border:0;border-radius:4px;cursor:pointer}
+    .config-item .btn-delete:hover{background:#ff5252}
     .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px}
     table{width:100%;border-collapse:collapse;min-width:1080px;background:#fff}
     th{position:sticky;top:0;background:var(--primary);color:#fff;padding:11px 9px;text-align:left;font-size:13px;white-space:nowrap}
@@ -58,16 +78,6 @@
     .badge{display:inline-block;background:#e9f3ec;color:#17633f;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700}
     .empty{text-align:center;color:var(--muted);padding:32px}
     
-    /* Novos estilos para integração Google Sheets */
-    .link-info{background:#e3f2fd;border-left:4px solid #2196f3;padding:12px;border-radius:4px;margin-bottom:18px;font-size:13px;color:#1565c0}
-    .link-info a{color:#1565c0;text-decoration:none;font-weight:600}
-    .link-info a:hover{text-decoration:underline}
-    
-    .google-section{background:#f0f7ff;border:1px solid #c5d9f1;border-radius:10px;padding:14px;margin-bottom:18px}
-    .google-section h3{margin:0 0 10px;font-size:14px;color:var(--primary);font-weight:700}
-    .google-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .google-controls input{flex:1;min-width:200px}
-    
     .message{padding:12px;border-radius:8px;margin-bottom:14px;font-size:13px;display:none}
     .message.show{display:block}
     .message.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
@@ -79,116 +89,414 @@
     .spinner{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:24px;height:24px;animation:spin 1s linear infinite;margin:0 auto 8px}
     @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
     
-    @media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.status{width:100%;margin-left:0}.google-controls{flex-direction:column}.google-controls input{width:100%}}
-    @media(max-width:560px){.cards{grid-template-columns:1fr}.topbar{padding:18px}.container{padding:0 10px}}
+    .supabase-info{background:#f0f7ff;border:1px solid #c5d9f1;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#1565c0}
+    .supabase-info.connected{background:#d4edda;border-color:#c3e6cb;color:#155724}
+    .supabase-info.error{background:#f8d7da;border-color:#f5c6cb;color:#721c24}
+    
+    .config-supabase{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
+    .config-supabase > div{display:flex;flex-direction:column}
+    .config-supabase label{font-size:13px;font-weight:700;margin-bottom:7px}
+    .config-supabase input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px}
+    
+    @media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.status{width:100%;margin-left:0}.topbar{flex-direction:column;gap:15px}.topbar-left,.topbar-right{width:100%}}
+    @media(max-width:560px){.cards{grid-template-columns:1fr}.topbar{padding:18px}.container{padding:0 10px}.config-supabase{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <h1>Fechamento de Estoque por Cliente</h1>
-    <p>Consolidação por CODDEP, endereços únicos, DESTIPUA, pallets equivalentes e valor total de estoque.</p>
+  <!-- Login Screen -->
+  <div class="login-container" id="loginContainer">
+    <div class="login-box">
+      <h1>🔐 Acesso Restrito</h1>
+      <p>Digite a senha para acessar a aplicação</p>
+      <input type="password" id="passwordInput" placeholder="Senha" />
+      <button onclick="verificarSenha()">Acessar</button>
+      <div class="login-error" id="loginError">Senha incorreta!</div>
+    </div>
   </div>
 
-  <div class="container">
-    <div class="link-info">
-      📋 Planilha online: <a href="https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing" target="_blank">ocupacao_diaria_teste</a>
-    </div>
-
-    <div id="message" class="message"></div>
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Enviando dados para Google Sheets...</p>
-    </div>
-
-    <div class="panel">
-      <div class="toolbar">
-        <label class="file-label">
-          Importar planilha
-          <input type="file" id="arquivo" accept=".xlsx,.xls,.csv" />
-        </label>
-        <button class="btn secondary" id="btnRecalcular" disabled>Recalcular</button>
-        <button class="btn success" id="btnExportar" disabled>Exportar fechamento</button>
-        <button class="btn secondary" id="btnLimpar" disabled>Limpar</button>
-        <span class="status" id="status">Nenhum arquivo importado.</span>
+  <!-- Main Application -->
+  <div id="mainApp" style="display:none">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Fechamento de Estoque por Cliente</h1>
+        <p>Consolidação por CODDEP, endereços únicos, DESTIPUA, pallets equivalentes e valor total de estoque.</p>
       </div>
-      <p class="hint">
-        Colunas esperadas: <b>CODDEP</b>, <b>DESCDEP</b>, <b>ETIQUE</b>, <b>DESTIPUA</b> e <b>VALORTOTAL</b>.
-        Endereços repetidos são considerados apenas uma vez dentro de cada cliente e DESTIPUA.
-      </p>
+      <div class="topbar-right">
+        <button onclick="mostrarConfiguracoes()">⚙️ Configurações</button>
+        <button onclick="fazerLogout()">🚪 Sair</button>
+      </div>
     </div>
 
-    <div class="cards">
-      <div class="card"><div class="label">Clientes</div><div class="value" id="kpiClientes">0</div></div>
-      <div class="card"><div class="label">Endereços únicos</div><div class="value" id="kpiEnderecos">0</div></div>
-      <div class="card"><div class="label">Tipos DESTIPUA</div><div class="value" id="kpiTipos">0</div></div>
-      <div class="card"><div class="label">Pallets equivalentes</div><div class="value" id="kpiPallets">0</div></div>
-      <div class="card"><div class="label">Valor total do estoque</div><div class="value" id="kpiValor">R$ 0,00</div></div>
-    </div>
+    <div class="container">
+      <div id="message" class="message"></div>
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Processando...</p>
+      </div>
 
-    <div class="panel">
-      <div class="section-title">
-        <div>
-          <h2>Configuração de pallets por DESTIPUA</h2>
-          <div class="hint">Informe quantos pallets cada endereço desse tipo representa. A configuração fica salva neste navegador.</div>
+      <!-- Painel de Configuração Supabase (Oculto por padrão) -->
+      <div class="panel" id="configPanel" style="display:none">
+        <div class="section-title">
+          <h2>⚙️ Configuração Supabase</h2>
+          <button class="btn secondary" onclick="ocultarConfiguracoes()">✕ Fechar</button>
+        </div>
+        <div class="config-supabase">
+          <div>
+            <label>URL da Supabase</label>
+            <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co" />
+          </div>
+          <div>
+            <label>Chave Anon (Pública)</label>
+            <input type="password" id="supabaseKey" placeholder="eyJhbGc..." />
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:15px">
+          <button class="btn secondary" id="btnMostrarChave" onclick="alternarMostrarChave()">👁️ Mostrar chave</button>
+          <button class="btn success" id="btnTestarConexao" onclick="testarConexaoSupabase()">🔗 Testar Conexão</button>
+          <button class="btn secondary" id="btnLimparConfig" onclick="limparConfigSupabase()">🗑️ Limpar</button>
+        </div>
+        <div id="supabaseStatus" class="supabase-info">🔄 Não conectado</div>
+        <p class="hint">Suas credenciais são salvas apenas neste navegador (localStorage).</p>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <label class="file-label">
+            Importar planilha
+            <input type="file" id="arquivo" accept=".xlsx,.xls,.csv" />
+          </label>
+          <button class="btn secondary" id="btnRecalcular" disabled>Recalcular</button>
+          <button class="btn success" id="btnExportar" disabled>Exportar fechamento</button>
+          <button class="btn secondary" id="btnLimpar" disabled>Limpar</button>
+          <span class="status" id="status">Nenhum arquivo importado.</span>
+        </div>
+        <p class="hint">
+          Colunas esperadas: <b>CODDEP</b>, <b>DESCDEP</b>, <b>ETIQUE</b>, <b>DESTIPUA</b> e <b>VALORTOTAL</b>.
+          Endereços repetidos são considerados apenas uma vez dentro de cada cliente e DESTIPUA.
+        </p>
+      </div>
+
+      <div class="cards">
+        <div class="card"><div class="label">Clientes</div><div class="value" id="kpiClientes">0</div></div>
+        <div class="card"><div class="label">Endereços únicos</div><div class="value" id="kpiEnderecos">0</div></div>
+        <div class="card"><div class="label">Tipos DESTIPUA</div><div class="value" id="kpiTipos">0</div></div>
+        <div class="card"><div class="label">Pallets equivalentes</div><div class="value" id="kpiPallets">0</div></div>
+        <div class="card"><div class="label">Valor total do estoque</div><div class="value" id="kpiValor">R$ 0,00</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h2>Configuração de pallets por DESTIPUA</h2>
+            <div class="hint">Informe quantos pallets cada endereço desse tipo representa. As configurações são salvas automaticamente na Supabase.</div>
+          </div>
+          <button class="btn secondary" id="btnAdicionarDestipua" disabled>+ Adicionar novo</button>
+        </div>
+        <div id="config" class="config-grid">
+          <div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>
         </div>
       </div>
-      <div id="config" class="config-grid">
-        <div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>
-      </div>
-    </div>
 
-    <div class="panel">
-      <div class="google-section">
-        <h3>📊 Enviar para Google Sheets</h3>
-        <div class="google-controls">
-          <input type="text" id="dataReferencia" placeholder="Data de Referência (DD/MM/YYYY)" disabled />
-          <button class="btn warning" id="btnEnviarGoogle" disabled>Enviar para Google Sheets</button>
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h2>Fechamento por cliente</h2>
+            <div class="hint">Quantidade DESTIPUA × fator configurado = pallets equivalentes do cliente.</div>
+          </div>
+          <input type="text" id="pesquisa" placeholder="Pesquisar CODDEP ou cliente" disabled />
         </div>
-      </div>
-    </div>
 
-    <div class="panel">
-      <div class="section-title">
-        <div>
-          <h2>Fechamento por cliente</h2>
-          <div class="hint">Quantidade DESTIPUA × fator configurado = pallets equivalentes do cliente.</div>
+        <div class="table-wrap">
+          <table id="tabela">
+            <thead>
+              <tr>
+                <th style="width:70px">Detalhe</th>
+                <th>CODDEP</th>
+                <th>Cliente</th>
+                <th class="num">Endereços únicos</th>
+                <th class="num">Tipos DESTIPUA</th>
+                <th class="num">Pallets equivalentes</th>
+                <th class="num">Valor do estoque</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr>
+            </tbody>
+            <tfoot id="tfoot"></tfoot>
+          </table>
         </div>
-        <input type="text" id="pesquisa" placeholder="Pesquisar CODDEP ou cliente" disabled />
-      </div>
-
-      <div class="table-wrap">
-        <table id="tabela">
-          <thead>
-            <tr>
-              <th style="width:70px">Detalhe</th>
-              <th>CODDEP</th>
-              <th>Cliente</th>
-              <th class="num">Endereços únicos</th>
-              <th class="num">Tipos DESTIPUA</th>
-              <th class="num">Pallets equivalentes</th>
-              <th class="num">Valor do estoque</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr>
-          </tbody>
-          <tfoot id="tfoot"></tfoot>
-        </table>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // ===== CONFIGURAÇÃO DE SENHA =====
+    const SENHA_CORRETA = "Mundial@2026";
+
+    // ===== VARIÁVEIS GLOBAIS =====
+    let supabase = null;
     let linhas = [];
     let consolidado = [];
-    let fatores = JSON.parse(localStorage.getItem("fatores_destipua_v2") || "{}");
+    let fatores = {};
+    let supabaseConnected = false;
 
     const moeda = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
     const numero = new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2});
 
     const normalizarTexto = v => String(v ?? "").trim();
     const normalizarCabecalho = v => normalizarTexto(v).toUpperCase().replace(/\s+/g,"");
+
+    // ===== FUNÇÕES DE LOGIN =====
+    function verificarSenha(){
+      const senha = document.getElementById("passwordInput").value;
+      if(senha === SENHA_CORRETA){
+        document.getElementById("loginContainer").classList.add("hidden");
+        document.getElementById("mainApp").style.display = "block";
+        carregarCredenciaisSupabase();
+        inicializarSupabase();
+      }else{
+        document.getElementById("loginError").style.display = "block";
+        document.getElementById("passwordInput").value = "";
+        setTimeout(() => {
+          document.getElementById("loginError").style.display = "none";
+        }, 3000);
+      }
+    }
+
+    function fazerLogout(){
+      if(confirm("Tem certeza que deseja sair?")){
+        document.getElementById("loginContainer").classList.remove("hidden");
+        document.getElementById("mainApp").style.display = "none";
+        document.getElementById("passwordInput").value = "";
+        linhas = [];
+        consolidado = [];
+        limpar();
+      }
+    }
+
+    // Permitir Enter para login
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("passwordInput").addEventListener("keypress", (e) => {
+        if(e.key === "Enter") verificarSenha();
+      });
+    });
+
+    // ===== FUNÇÕES DE CONFIGURAÇÃO SUPABASE =====
+    function mostrarConfiguracoes(){
+      document.getElementById("configPanel").style.display = "block";
+    }
+
+    function ocultarConfiguracoes(){
+      document.getElementById("configPanel").style.display = "none";
+    }
+
+    function carregarCredenciaisSupabase(){
+      const url = localStorage.getItem("supabase_url");
+      const key = localStorage.getItem("supabase_key");
+      if(url) document.getElementById("supabaseUrl").value = url;
+      if(key) document.getElementById("supabaseKey").value = key;
+    }
+
+    function salvarCredenciaisSupabase(){
+      const url = document.getElementById("supabaseUrl").value.trim();
+      const key = document.getElementById("supabaseKey").value.trim();
+      if(url) localStorage.setItem("supabase_url", url);
+      if(key) localStorage.setItem("supabase_key", key);
+    }
+
+    function limparConfigSupabase(){
+      if(confirm("Deseja limpar as credenciais?")){
+        document.getElementById("supabaseUrl").value = "";
+        document.getElementById("supabaseKey").value = "";
+        localStorage.removeItem("supabase_url");
+        localStorage.removeItem("supabase_key");
+        supabaseConnected = false;
+        mostrarSupabaseStatus("Credenciais limpas", "error");
+      }
+    }
+
+    function alternarMostrarChave(){
+      const input = document.getElementById("supabaseKey");
+      const btn = document.getElementById("btnMostrarChave");
+      if(input.type === "password"){
+        input.type = "text";
+        btn.textContent = "🙈 Ocultar chave";
+      }else{
+        input.type = "password";
+        btn.textContent = "👁️ Mostrar chave";
+      }
+    }
+
+    async function testarConexaoSupabase(){
+      const url = document.getElementById("supabaseUrl").value.trim();
+      const key = document.getElementById("supabaseKey").value.trim();
+
+      if(!url || !key){
+        mostrarSupabaseStatus("❌ Preencha URL e chave", "error");
+        return;
+      }
+
+      salvarCredenciaisSupabase();
+      mostrarSupabaseStatus("🔄 Testando conexão...", "info");
+
+      try {
+        const testClient = window.supabase.createClient(url, key);
+        const { error } = await testClient.from("configuracao_pallets").select("count");
+        
+        if(error) throw error;
+        
+        supabase = testClient;
+        supabaseConnected = true;
+        mostrarSupabaseStatus("✅ Conectado com sucesso!", "connected");
+        await carregarConfiguracoes();
+        
+      } catch(err) {
+        console.error("Erro:", err);
+        mostrarSupabaseStatus(`❌ Erro: ${err.message}`, "error");
+        supabaseConnected = false;
+      }
+    }
+
+    async function inicializarSupabase(){
+      const url = localStorage.getItem("supabase_url");
+      const key = localStorage.getItem("supabase_key");
+
+      if(!url || !key){
+        mostrarSupabaseStatus("⚠️ Configure as credenciais da Supabase", "error");
+        return;
+      }
+
+      try {
+        supabase = window.supabase.createClient(url, key);
+        const { error } = await supabase.from("configuracao_pallets").select("count");
+        
+        if(error) throw error;
+        
+        supabaseConnected = true;
+        mostrarSupabaseStatus("✅ Conectado à Supabase", "connected");
+        await carregarConfiguracoes();
+        
+      } catch(err) {
+        console.error("Erro ao conectar:", err);
+        mostrarSupabaseStatus("⚠️ Não conectado. Configure as credenciais.", "error");
+      }
+    }
+
+    async function carregarConfiguracoes(){
+      if(!supabaseConnected) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("configuracao_pallets")
+          .select("destipua, fator")
+          .order("destipua");
+
+        if(error) throw error;
+
+        fatores = {};
+        data.forEach(item => {
+          fatores[item.destipua] = item.fator;
+        });
+
+        renderizarConfiguracao(Object.keys(fatores).sort((a,b)=>a.localeCompare(b,"pt-BR")));
+        document.getElementById("btnAdicionarDestipua").disabled = false;
+        
+      } catch(err) {
+        console.error("Erro ao carregar:", err);
+      }
+    }
+
+    async function salvarConfiguracao(destipua, fator){
+      if(!supabaseConnected) {
+        mostrarMensagem("Não conectado à Supabase", "error");
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from("configuracao_pallets")
+          .upsert({ destipua, fator }, { onConflict: "destipua" });
+
+        if(error) throw error;
+        mostrarMensagem(`✓ "${destipua}" salvo!`, "success");
+        
+      } catch(err) {
+        console.error("Erro:", err);
+        mostrarMensagem("Erro ao salvar: " + err.message, "error");
+      }
+    }
+
+    async function deletarConfiguracao(destipua){
+      if(!supabaseConnected) {
+        mostrarMensagem("Não conectado à Supabase", "error");
+        return;
+      }
+
+      if(!confirm(`Deletar "${destipua}"?`)) return;
+
+      try {
+        const { error } = await supabase
+          .from("configuracao_pallets")
+          .delete()
+          .eq("destipua", destipua);
+
+        if(error) throw error;
+        
+        delete fatores[destipua];
+        renderizarConfiguracao(Object.keys(fatores).sort((a,b)=>a.localeCompare(b,"pt-BR")));
+        mostrarMensagem(`✓ "${destipua}" deletado!`, "success");
+        processar();
+        
+      } catch(err) {
+        console.error("Erro:", err);
+        mostrarMensagem("Erro ao deletar: " + err.message, "error");
+      }
+    }
+
+    function renderizarConfiguracao(tipos){
+      const area = document.getElementById("config");
+      area.innerHTML = "";
+
+      if(tipos.length === 0){
+        area.innerHTML = '<div class="empty">Nenhuma configuração. Importe um arquivo ou adicione manualmente.</div>';
+        return;
+      }
+
+      tipos.forEach(tipo => {
+        if(fatores[tipo] === undefined) fatores[tipo] = 1;
+
+        const item = document.createElement("div");
+        item.className = "config-item";
+        item.innerHTML = `
+          <button class="btn-delete" data-tipo="${encodeURIComponent(tipo)}">✕</button>
+          <label>${escapeHtml(tipo)}</label>
+          <div class="row">
+            <input type="number" min="0" step="0.01" value="${fatores[tipo]}"
+              data-tipo="${encodeURIComponent(tipo)}" />
+            <span class="hint">pallet(s) por endereço</span>
+          </div>`;
+        area.appendChild(item);
+      });
+
+      area.querySelectorAll("input").forEach(inp => {
+        inp.addEventListener("change", ev => {
+          const tipo = decodeURIComponent(ev.target.dataset.tipo);
+          const novoFator = Math.max(0, Number(ev.target.value) || 0);
+          fatores[tipo] = novoFator;
+          salvarConfiguracao(tipo, novoFator);
+          processar();
+        });
+      });
+
+      area.querySelectorAll(".btn-delete").forEach(btn => {
+        btn.addEventListener("click", ev => {
+          const tipo = decodeURIComponent(ev.target.dataset.tipo);
+          deletarConfiguracao(tipo);
+        });
+      });
+    }
 
     function parseValorBR(v){
       if(typeof v === "number") return Number.isFinite(v) ? v : 0;
@@ -215,7 +523,7 @@
     document.getElementById("btnExportar").addEventListener("click", exportar);
     document.getElementById("btnLimpar").addEventListener("click", limpar);
     document.getElementById("pesquisa").addEventListener("input", renderTabela);
-    document.getElementById("btnEnviarGoogle").addEventListener("click", enviarParaGoogleSheets);
+    document.getElementById("btnAdicionarDestipua").addEventListener("click", adicionarNovoDestipua);
 
     function importarArquivo(e){
       const arquivo = e.target.files[0];
@@ -239,62 +547,20 @@
             valor: parseValorBR(r[col.VALORTOTAL])
           })).filter(r => r.coddep);
 
-          montarConfiguracao();
           processar();
 
           document.getElementById("btnRecalcular").disabled = false;
           document.getElementById("btnExportar").disabled = false;
           document.getElementById("btnLimpar").disabled = false;
           document.getElementById("pesquisa").disabled = false;
-          document.getElementById("btnEnviarGoogle").disabled = false;
-          document.getElementById("dataReferencia").disabled = false;
           document.getElementById("status").textContent =
             arquivo.name + " — " + numero.format(linhas.length) + " linhas processadas.";
-          
-          // Definir data padrão
-          const hoje = new Date();
-          const dia = String(hoje.getDate()).padStart(2, '0');
-          const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-          const ano = hoje.getFullYear();
-          document.getElementById("dataReferencia").value = `${dia}/${mes}/${ano}`;
         }catch(err){
           alert("Não foi possível processar o arquivo.\n\n" + err.message);
           document.getElementById("status").textContent = "Erro na importação.";
         }
       };
       reader.readAsArrayBuffer(arquivo);
-    }
-
-    function montarConfiguracao(){
-      const tipos = [...new Set(linhas.map(x => x.destipua))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
-      const area = document.getElementById("config");
-      area.innerHTML = "";
-
-      tipos.forEach(tipo => {
-        if(fatores[tipo] === undefined) fatores[tipo] = 1;
-
-        const item = document.createElement("div");
-        item.className = "config-item";
-        item.innerHTML = `
-          <label>${escapeHtml(tipo)}</label>
-          <div class="row">
-            <input type="number" min="0" step="0.01" value="${fatores[tipo]}"
-              data-tipo="${encodeURIComponent(tipo)}" />
-            <span class="hint">pallet(s) por endereço</span>
-          </div>`;
-        area.appendChild(item);
-      });
-
-      area.querySelectorAll("input").forEach(inp => {
-        inp.addEventListener("change", ev => {
-          const tipo = decodeURIComponent(ev.target.dataset.tipo);
-          fatores[tipo] = Math.max(0, Number(ev.target.value) || 0);
-          localStorage.setItem("fatores_destipua_v2",JSON.stringify(fatores));
-          processar();
-        });
-      });
-
-      localStorage.setItem("fatores_destipua_v2",JSON.stringify(fatores));
     }
 
     function processar(){
@@ -475,87 +741,29 @@
       const ws1 = XLSX.utils.json_to_sheet(fechamento);
       const ws2 = XLSX.utils.json_to_sheet(detalhes);
 
-      ws1["!cols"] = [
-        {wch:12},{wch:48},{wch:18},{wch:18},{wch:22},{wch:20}
-      ];
-      ws2["!cols"] = [
-        {wch:12},{wch:48},{wch:28},{wch:18},{wch:16},{wch:22}
-      ];
+      ws1["!cols"] = [{wch:12},{wch:48},{wch:18},{wch:18},{wch:22},{wch:20}];
+      ws2["!cols"] = [{wch:12},{wch:48},{wch:28},{wch:18},{wch:16},{wch:22}];
 
       XLSX.utils.book_append_sheet(wb,ws1,"Fechamento");
       XLSX.utils.book_append_sheet(wb,ws2,"Detalhamento DESTIPUA");
       XLSX.writeFile(wb,"Fechamento_Estoque_Clientes.xlsx");
     }
 
-    function enviarParaGoogleSheets(){
-      const dataReferencia = document.getElementById("dataReferencia").value.trim();
+    async function adicionarNovoDestipua(){
+      const novoTipo = prompt("Digite o nome do novo DESTIPUA:");
+      if(!novoTipo || !novoTipo.trim()) return;
 
-      if(!dataReferencia){
-        mostrarMensagem("Informe a data de referência", "error");
+      const tipo = novoTipo.trim();
+      if(fatores.hasOwnProperty(tipo)){
+        alert("Este DESTIPUA já existe!");
         return;
       }
 
-      if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dataReferencia)){
-        mostrarMensagem("Formato de data inválido. Use DD/MM/YYYY", "error");
-        return;
-      }
+      fatores[tipo] = 1;
+      await salvarConfiguracao(tipo, 1);
 
-      if(consolidado.length === 0){
-        mostrarMensagem("Nenhum dado para enviar", "error");
-        return;
-      }
-
-      // Preparar dados para envio
-      const dadosParaEnvio = consolidado.map(c => ({
-        depositante: c.coddep,
-        cliente: c.descdep,
-        data_referencia: dataReferencia,
-        ocupacao: c.enderecos,
-        valor_estoque: c.valor
-      }));
-
-      document.getElementById("loading").classList.add("show");
-      document.getElementById("btnEnviarGoogle").disabled = true;
-
-      // Solicitar URL do Google Apps Script
-      const scriptUrl = prompt(
-        "Cole a URL do Google Apps Script:\n\n" +
-        "Exemplo: https://script.google.com/macros/s/SEU_SCRIPT_ID/usercontent\n\n" +
-        "Deixe em branco para usar a URL padrão."
-      );
-
-      if(scriptUrl === null){
-        document.getElementById("loading").classList.remove("show");
-        document.getElementById("btnEnviarGoogle").disabled = false;
-        return;
-      }
-
-      const url = scriptUrl || "https://script.google.com/macros/s/SEU_SCRIPT_ID/usercontent";
-
-      fetch(url, {
-        method: "POST",
-        body: JSON.stringify({
-          data_referencia: dataReferencia,
-          dados: dadosParaEnvio
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById("loading").classList.remove("show");
-        
-        if(data.success){
-          mostrarMensagem(`✓ ${data.message}`, "success");
-          document.getElementById("dataReferencia").value = "";
-        }else{
-          mostrarMensagem(`✗ ${data.message}`, "error");
-          document.getElementById("btnEnviarGoogle").disabled = false;
-        }
-      })
-      .catch(error => {
-        document.getElementById("loading").classList.remove("show");
-        mostrarMensagem(`Erro ao enviar: ${error.message}`, "error");
-        document.getElementById("btnEnviarGoogle").disabled = false;
-      });
+      const tipos = Object.keys(fatores).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+      renderizarConfiguracao(tipos);
     }
 
     function mostrarMensagem(texto, tipo){
@@ -570,19 +778,21 @@
       }
     }
 
+    function mostrarSupabaseStatus(texto, tipo){
+      const statusDiv = document.getElementById("supabaseStatus");
+      statusDiv.textContent = texto;
+      statusDiv.className = `supabase-info ${tipo}`;
+    }
+
     function limpar(){
       linhas=[]; consolidado=[];
       document.getElementById("arquivo").value="";
       document.getElementById("pesquisa").value="";
-      document.getElementById("dataReferencia").value="";
       document.getElementById("pesquisa").disabled=true;
       document.getElementById("btnRecalcular").disabled=true;
       document.getElementById("btnExportar").disabled=true;
       document.getElementById("btnLimpar").disabled=true;
-      document.getElementById("btnEnviarGoogle").disabled=true;
-      document.getElementById("dataReferencia").disabled=true;
       document.getElementById("status").textContent="Nenhum arquivo importado.";
-      document.getElementById("config").innerHTML='<div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>';
       document.getElementById("tbody").innerHTML='<tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr>';
       document.getElementById("tfoot").innerHTML="";
       ["kpiClientes","kpiEnderecos","kpiTipos","kpiPallets"].forEach(id=>document.getElementById(id).textContent="0");
