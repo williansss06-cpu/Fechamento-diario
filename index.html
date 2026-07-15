@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fechamento de Estoque por Cliente</title>
+  <style>
+    :root{
+      --bg:#f3f6fa; --card:#ffffff; --primary:#123b63; --primary2:#1f5d8f;
+      --text:#182433; --muted:#66778a; --border:#dbe3ec; --ok:#16855b;
+      --shadow:0 8px 24px rgba(20,45,70,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:22px 28px}
+    .topbar h1{margin:0 0 6px;font-size:25px}
+    .topbar p{margin:0;opacity:.88}
+    .container{max-width:1500px;margin:22px auto;padding:0 18px 40px}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .file-label,.btn{
+      border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer;
+      background:var(--primary);color:#fff;display:inline-flex;align-items:center;gap:8px
+    }
+    .btn.secondary{background:#e9f0f7;color:var(--primary);border:1px solid #c9d7e5}
+    .btn.success{background:var(--ok)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    input[type=file]{display:none}
+    input[type=text],input[type=number]{
+      border:1px solid var(--border);border-radius:8px;padding:10px 11px;background:#fff
+    }
+    .status{font-size:14px;color:var(--muted);margin-left:auto}
+    .cards{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:16px;box-shadow:var(--shadow)}
+    .card .label{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.4px}
+    .card .value{font-size:24px;font-weight:800;margin-top:7px;color:var(--primary)}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .section-title h2{font-size:19px;margin:0}
+    .hint{font-size:13px;color:var(--muted);line-height:1.45}
+    .config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+    .config-item{border:1px solid var(--border);border-radius:10px;padding:11px;background:#fafcff}
+    .config-item label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+    .config-item .row{display:flex;gap:8px;align-items:center}
+    .config-item input{width:110px}
+    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px}
+    table{width:100%;border-collapse:collapse;min-width:1080px;background:#fff}
+    th{position:sticky;top:0;background:var(--primary);color:#fff;padding:11px 9px;text-align:left;font-size:13px;white-space:nowrap}
+    td{padding:10px 9px;border-bottom:1px solid #edf1f5;font-size:13px;vertical-align:top}
+    tr:hover td{background:#f8fbfe}
+    td.num,th.num{text-align:right}
+    .expand{background:#e8f0f8;color:var(--primary);border:0;border-radius:7px;padding:6px 9px;font-weight:700;cursor:pointer}
+    .detail-row td{background:#f5f8fc!important;padding:14px}
+    .detail-box{border-left:4px solid var(--primary2);padding-left:12px}
+    .detail-table{min-width:650px;margin-top:8px}
+    .detail-table th{position:static;background:#dce8f3;color:#183b59}
+    .total-row td{font-weight:800;background:#eaf2f8}
+    .badge{display:inline-block;background:#e9f3ec;color:#17633f;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700}
+    .empty{text-align:center;color:var(--muted);padding:32px}
+    @media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.status{width:100%;margin-left:0}}
+    @media(max-width:560px){.cards{grid-template-columns:1fr}.topbar{padding:18px}.container{padding:0 10px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Fechamento de Estoque por Cliente</h1>
+    <p>Consolidação por CODDEP, endereços únicos, DESTIPUA, pallets equivalentes e valor total de estoque.</p>
+  </div>
+
+  <div class="container">
+    <div class="panel">
+      <div class="toolbar">
+        <label class="file-label">
+          Importar planilha
+          <input type="file" id="arquivo" accept=".xlsx,.xls,.csv" />
+        </label>
+        <button class="btn secondary" id="btnRecalcular" disabled>Recalcular</button>
+        <button class="btn success" id="btnExportar" disabled>Exportar fechamento</button>
+        <button class="btn secondary" id="btnLimpar" disabled>Limpar</button>
+        <span class="status" id="status">Nenhum arquivo importado.</span>
+      </div>
+      <p class="hint">
+        Colunas esperadas: <b>CODDEP</b>, <b>DESCDEP</b>, <b>ETIQUE</b>, <b>DESTIPUA</b> e <b>VALORTOTAL</b>.
+        Endereços repetidos são considerados apenas uma vez dentro de cada cliente e DESTIPUA.
+      </p>
+    </div>
+
+    <div class="cards">
+      <div class="card"><div class="label">Clientes</div><div class="value" id="kpiClientes">0</div></div>
+      <div class="card"><div class="label">Endereços únicos</div><div class="value" id="kpiEnderecos">0</div></div>
+      <div class="card"><div class="label">Tipos DESTIPUA</div><div class="value" id="kpiTipos">0</div></div>
+      <div class="card"><div class="label">Pallets equivalentes</div><div class="value" id="kpiPallets">0</div></div>
+      <div class="card"><div class="label">Valor total do estoque</div><div class="value" id="kpiValor">R$ 0,00</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">
+        <div>
+          <h2>Configuração de pallets por DESTIPUA</h2>
+          <div class="hint">Informe quantos pallets cada endereço desse tipo representa. A configuração fica salva neste navegador.</div>
+        </div>
+      </div>
+      <div id="config" class="config-grid">
+        <div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">
+        <div>
+          <h2>Fechamento por cliente</h2>
+          <div class="hint">Quantidade DESTIPUA × fator configurado = pallets equivalentes do cliente.</div>
+        </div>
+        <input type="text" id="pesquisa" placeholder="Pesquisar CODDEP ou cliente" disabled />
+      </div>
+
+      <div class="table-wrap">
+        <table id="tabela">
+          <thead>
+            <tr>
+              <th style="width:70px">Detalhe</th>
+              <th>CODDEP</th>
+              <th>Cliente</th>
+              <th class="num">Endereços únicos</th>
+              <th class="num">Tipos DESTIPUA</th>
+              <th class="num">Pallets equivalentes</th>
+              <th class="num">Valor do estoque</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr>
+          </tbody>
+          <tfoot id="tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script>
+    let linhas = [];
+    let consolidado = [];
+    let fatores = JSON.parse(localStorage.getItem("fatores_destipua_v2") || "{}");
+
+    const moeda = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+    const numero = new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2});
+
+    const normalizarTexto = v => String(v ?? "").trim();
+    const normalizarCabecalho = v => normalizarTexto(v).toUpperCase().replace(/\s+/g,"");
+
+    function parseValorBR(v){
+      if(typeof v === "number") return Number.isFinite(v) ? v : 0;
+      let s = normalizarTexto(v).replace(/\s/g,"");
+      if(!s) return 0;
+      if(s.includes(",") && s.includes(".")) s = s.replace(/\./g,"").replace(",",".");
+      else if(s.includes(",")) s = s.replace(",",".");
+      s = s.replace(/[^\d.-]/g,"");
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function localizarColunas(obj){
+      const mapa = {};
+      Object.keys(obj).forEach(k => mapa[normalizarCabecalho(k)] = k);
+      const obrigatorias = ["CODDEP","DESCDEP","ETIQUE","DESTIPUA","VALORTOTAL"];
+      const faltantes = obrigatorias.filter(c => !mapa[c]);
+      if(faltantes.length) throw new Error("Colunas não encontradas: " + faltantes.join(", "));
+      return mapa;
+    }
+
+    document.getElementById("arquivo").addEventListener("change", importarArquivo);
+    document.getElementById("btnRecalcular").addEventListener("click", processar);
+    document.getElementById("btnExportar").addEventListener("click", exportar);
+    document.getElementById("btnLimpar").addEventListener("click", limpar);
+    document.getElementById("pesquisa").addEventListener("input", renderTabela);
+
+    function importarArquivo(e){
+      const arquivo = e.target.files[0];
+      if(!arquivo) return;
+      document.getElementById("status").textContent = "Lendo arquivo...";
+      const reader = new FileReader();
+
+      reader.onload = evt => {
+        try{
+          const wb = XLSX.read(evt.target.result,{type:"array",cellDates:true});
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const bruto = XLSX.utils.sheet_to_json(ws,{defval:"",raw:true});
+          if(!bruto.length) throw new Error("A planilha está vazia.");
+
+          const col = localizarColunas(bruto[0]);
+          linhas = bruto.map(r => ({
+            coddep: normalizarTexto(r[col.CODDEP]),
+            descdep: normalizarTexto(r[col.DESCDEP]),
+            etique: normalizarTexto(r[col.ETIQUE]),
+            destipua: normalizarTexto(r[col.DESTIPUA]) || "SEM DESTIPUA",
+            valor: parseValorBR(r[col.VALORTOTAL])
+          })).filter(r => r.coddep);
+
+          montarConfiguracao();
+          processar();
+
+          document.getElementById("btnRecalcular").disabled = false;
+          document.getElementById("btnExportar").disabled = false;
+          document.getElementById("btnLimpar").disabled = false;
+          document.getElementById("pesquisa").disabled = false;
+          document.getElementById("status").textContent =
+            arquivo.name + " — " + numero.format(linhas.length) + " linhas processadas.";
+        }catch(err){
+          alert("Não foi possível processar o arquivo.\n\n" + err.message);
+          document.getElementById("status").textContent = "Erro na importação.";
+        }
+      };
+      reader.readAsArrayBuffer(arquivo);
+    }
+
+    function montarConfiguracao(){
+      const tipos = [...new Set(linhas.map(x => x.destipua))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+      const area = document.getElementById("config");
+      area.innerHTML = "";
+
+      tipos.forEach(tipo => {
+        if(fatores[tipo] === undefined) fatores[tipo] = 1;
+
+        const item = document.createElement("div");
+        item.className = "config-item";
+        item.innerHTML = `
+          <label>${escapeHtml(tipo)}</label>
+          <div class="row">
+            <input type="number" min="0" step="0.01" value="${fatores[tipo]}"
+              data-tipo="${encodeURIComponent(tipo)}" />
+            <span class="hint">pallet(s) por endereço</span>
+          </div>`;
+        area.appendChild(item);
+      });
+
+      area.querySelectorAll("input").forEach(inp => {
+        inp.addEventListener("change", ev => {
+          const tipo = decodeURIComponent(ev.target.dataset.tipo);
+          fatores[tipo] = Math.max(0, Number(ev.target.value) || 0);
+          localStorage.setItem("fatores_destipua_v2",JSON.stringify(fatores));
+          processar();
+        });
+      });
+
+      localStorage.setItem("fatores_destipua_v2",JSON.stringify(fatores));
+    }
+
+    function processar(){
+      const clientes = new Map();
+
+      linhas.forEach(r => {
+        if(!clientes.has(r.coddep)){
+          clientes.set(r.coddep,{
+            coddep:r.coddep,
+            descdep:r.descdep,
+            enderecos:new Set(),
+            valor:0,
+            tipos:new Map()
+          });
+        }
+
+        const c = clientes.get(r.coddep);
+        if(!c.descdep && r.descdep) c.descdep = r.descdep;
+        if(r.etique) c.enderecos.add(r.etique);
+        c.valor += r.valor;
+
+        if(!c.tipos.has(r.destipua)) c.tipos.set(r.destipua,new Set());
+        if(r.etique) c.tipos.get(r.destipua).add(r.etique);
+      });
+
+      consolidado = [...clientes.values()].map(c => {
+        const detalhes = [...c.tipos.entries()].map(([tipo,setEnd]) => {
+          const qtd = setEnd.size;
+          const fator = Number(fatores[tipo] ?? 1);
+          return {tipo,qtd,fator,pallets:qtd*fator};
+        }).sort((a,b)=>a.tipo.localeCompare(b.tipo,"pt-BR"));
+
+        return {
+          coddep:c.coddep,
+          descdep:c.descdep,
+          enderecos:c.enderecos.size,
+          tipos:detalhes.length,
+          pallets:detalhes.reduce((s,d)=>s+d.pallets,0),
+          valor:c.valor,
+          detalhes
+        };
+      }).sort((a,b)=>String(a.coddep).localeCompare(String(b.coddep),"pt-BR",{numeric:true}));
+
+      atualizarKPIs();
+      renderTabela();
+    }
+
+    function atualizarKPIs(){
+      const todosTipos = new Set(linhas.map(x=>x.destipua));
+      const totalEnd = consolidado.reduce((s,c)=>s+c.enderecos,0);
+      const totalPallets = consolidado.reduce((s,c)=>s+c.pallets,0);
+      const totalValor = consolidado.reduce((s,c)=>s+c.valor,0);
+
+      document.getElementById("kpiClientes").textContent = numero.format(consolidado.length);
+      document.getElementById("kpiEnderecos").textContent = numero.format(totalEnd);
+      document.getElementById("kpiTipos").textContent = numero.format(todosTipos.size);
+      document.getElementById("kpiPallets").textContent = numero.format(totalPallets);
+      document.getElementById("kpiValor").textContent = moeda.format(totalValor);
+    }
+
+    function renderTabela(){
+      const termo = normalizarTexto(document.getElementById("pesquisa").value).toLowerCase();
+      const dados = consolidado.filter(c =>
+        !termo || c.coddep.toLowerCase().includes(termo) || c.descdep.toLowerCase().includes(termo)
+      );
+
+      const tb = document.getElementById("tbody");
+      tb.innerHTML = "";
+
+      if(!dados.length){
+        tb.innerHTML = '<tr><td colspan="7" class="empty">Nenhum cliente encontrado.</td></tr>';
+      }else{
+        dados.forEach((c,idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><button class="expand" data-i="${idx}">Ver</button></td>
+            <td><span class="badge">${escapeHtml(c.coddep)}</span></td>
+            <td>${escapeHtml(c.descdep)}</td>
+            <td class="num">${numero.format(c.enderecos)}</td>
+            <td class="num">${numero.format(c.tipos)}</td>
+            <td class="num"><b>${numero.format(c.pallets)}</b></td>
+            <td class="num"><b>${moeda.format(c.valor)}</b></td>`;
+          tb.appendChild(tr);
+
+          const detalhe = document.createElement("tr");
+          detalhe.className = "detail-row";
+          detalhe.style.display = "none";
+          detalhe.innerHTML = `<td colspan="7">${montarDetalhe(c)}</td>`;
+          tb.appendChild(detalhe);
+
+          tr.querySelector(".expand").addEventListener("click", ev => {
+            const aberto = detalhe.style.display !== "none";
+            detalhe.style.display = aberto ? "none" : "table-row";
+            ev.target.textContent = aberto ? "Ver" : "Fechar";
+          });
+        });
+      }
+
+      const totalEnd = dados.reduce((s,c)=>s+c.enderecos,0);
+      const totalPallets = dados.reduce((s,c)=>s+c.pallets,0);
+      const totalValor = dados.reduce((s,c)=>s+c.valor,0);
+      document.getElementById("tfoot").innerHTML = dados.length ? `
+        <tr class="total-row">
+          <td colspan="3">TOTAL GERAL</td>
+          <td class="num">${numero.format(totalEnd)}</td>
+          <td class="num">—</td>
+          <td class="num">${numero.format(totalPallets)}</td>
+          <td class="num">${moeda.format(totalValor)}</td>
+        </tr>` : "";
+    }
+
+    function montarDetalhe(c){
+      const rows = c.detalhes.map(d => `
+        <tr>
+          <td>${escapeHtml(d.tipo)}</td>
+          <td class="num">${numero.format(d.qtd)}</td>
+          <td class="num">${numero.format(d.fator)}</td>
+          <td class="num"><b>${numero.format(d.pallets)}</b></td>
+        </tr>`).join("");
+
+      return `
+        <div class="detail-box">
+          <b>${escapeHtml(c.coddep)} — ${escapeHtml(c.descdep)}</b>
+          <div class="table-wrap" style="margin-top:10px">
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>DESTIPUA</th>
+                  <th class="num">Endereços únicos</th>
+                  <th class="num">Fator pallet</th>
+                  <th class="num">Pallets equivalentes</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="3">TOTAL DO CLIENTE</td>
+                  <td class="num">${numero.format(c.pallets)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function exportar(){
+      if(!consolidado.length) return;
+
+      const fechamento = consolidado.map(c => ({
+        CODDEP:c.coddep,
+        CLIENTE:c.descdep,
+        ENDERECOS_UNICOS:c.enderecos,
+        TIPOS_DESTIPUA:c.tipos,
+        PALLETS_EQUIVALENTES:c.pallets,
+        VALOR_ESTOQUE:c.valor
+      }));
+
+      fechamento.push({
+        CODDEP:"TOTAL GERAL",
+        CLIENTE:"",
+        ENDERECOS_UNICOS:consolidado.reduce((s,c)=>s+c.enderecos,0),
+        TIPOS_DESTIPUA:"",
+        PALLETS_EQUIVALENTES:consolidado.reduce((s,c)=>s+c.pallets,0),
+        VALOR_ESTOQUE:consolidado.reduce((s,c)=>s+c.valor,0)
+      });
+
+      const detalhes = [];
+      consolidado.forEach(c => c.detalhes.forEach(d => detalhes.push({
+        CODDEP:c.coddep,
+        CLIENTE:c.descdep,
+        DESTIPUA:d.tipo,
+        ENDERECOS_UNICOS:d.qtd,
+        FATOR_PALLET:d.fator,
+        PALLETS_EQUIVALENTES:d.pallets
+      })));
+
+      const wb = XLSX.utils.book_new();
+      const ws1 = XLSX.utils.json_to_sheet(fechamento);
+      const ws2 = XLSX.utils.json_to_sheet(detalhes);
+
+      ws1["!cols"] = [
+        {wch:12},{wch:48},{wch:18},{wch:18},{wch:22},{wch:20}
+      ];
+      ws2["!cols"] = [
+        {wch:12},{wch:48},{wch:28},{wch:18},{wch:16},{wch:22}
+      ];
+
+      XLSX.utils.book_append_sheet(wb,ws1,"Fechamento");
+      XLSX.utils.book_append_sheet(wb,ws2,"Detalhamento DESTIPUA");
+      XLSX.writeFile(wb,"Fechamento_Estoque_Clientes.xlsx");
+    }
+
+    function limpar(){
+      linhas=[]; consolidado=[];
+      document.getElementById("arquivo").value="";
+      document.getElementById("pesquisa").value="";
+      document.getElementById("pesquisa").disabled=true;
+      document.getElementById("btnRecalcular").disabled=true;
+      document.getElementById("btnExportar").disabled=true;
+      document.getElementById("btnLimpar").disabled=true;
+      document.getElementById("status").textContent="Nenhum arquivo importado.";
+      document.getElementById("config").innerHTML='<div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>';
+      document.getElementById("tbody").innerHTML='<tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr>';
+      document.getElementById("tfoot").innerHTML="";
+      ["kpiClientes","kpiEnderecos","kpiTipos","kpiPallets"].forEach(id=>document.getElementById(id).textContent="0");
+      document.getElementById("kpiValor").textContent="R$ 0,00";
+    }
+
+    function escapeHtml(v){
+      return String(v ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+  </script>
+</body>
+</html>
