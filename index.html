@@ -24,9 +24,10 @@
     }
     .btn.secondary{background:#e9f0f7;color:var(--primary);border:1px solid #c9d7e5}
     .btn.success{background:var(--ok)}
+    .btn.warning{background:#d4a017;color:#fff}
     .btn:disabled{opacity:.45;cursor:not-allowed}
     input[type=file]{display:none}
-    input[type=text],input[type=number]{
+    input[type=text],input[type=number],input[type=date]{
       border:1px solid var(--border);border-radius:8px;padding:10px 11px;background:#fff
     }
     .status{font-size:14px;color:var(--muted);margin-left:auto}
@@ -56,7 +57,29 @@
     .total-row td{font-weight:800;background:#eaf2f8}
     .badge{display:inline-block;background:#e9f3ec;color:#17633f;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700}
     .empty{text-align:center;color:var(--muted);padding:32px}
-    @media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.status{width:100%;margin-left:0}}
+    
+    /* Novos estilos para integração Google Sheets */
+    .link-info{background:#e3f2fd;border-left:4px solid #2196f3;padding:12px;border-radius:4px;margin-bottom:18px;font-size:13px;color:#1565c0}
+    .link-info a{color:#1565c0;text-decoration:none;font-weight:600}
+    .link-info a:hover{text-decoration:underline}
+    
+    .google-section{background:#f0f7ff;border:1px solid #c5d9f1;border-radius:10px;padding:14px;margin-bottom:18px}
+    .google-section h3{margin:0 0 10px;font-size:14px;color:var(--primary);font-weight:700}
+    .google-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .google-controls input{flex:1;min-width:200px}
+    
+    .message{padding:12px;border-radius:8px;margin-bottom:14px;font-size:13px;display:none}
+    .message.show{display:block}
+    .message.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .message.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .message.info{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
+    
+    .loading{display:none;text-align:center;padding:20px}
+    .loading.show{display:block}
+    .spinner{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:24px;height:24px;animation:spin 1s linear infinite;margin:0 auto 8px}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    
+    @media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.status{width:100%;margin-left:0}.google-controls{flex-direction:column}.google-controls input{width:100%}}
     @media(max-width:560px){.cards{grid-template-columns:1fr}.topbar{padding:18px}.container{padding:0 10px}}
   </style>
 </head>
@@ -67,6 +90,16 @@
   </div>
 
   <div class="container">
+    <div class="link-info">
+      📋 Planilha online: <a href="https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing" target="_blank">ocupacao_diaria_teste</a>
+    </div>
+
+    <div id="message" class="message"></div>
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Enviando dados para Google Sheets...</p>
+    </div>
+
     <div class="panel">
       <div class="toolbar">
         <label class="file-label">
@@ -101,6 +134,16 @@
       </div>
       <div id="config" class="config-grid">
         <div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="google-section">
+        <h3>📊 Enviar para Google Sheets</h3>
+        <div class="google-controls">
+          <input type="text" id="dataReferencia" placeholder="Data de Referência (DD/MM/YYYY)" disabled />
+          <button class="btn warning" id="btnEnviarGoogle" disabled>Enviar para Google Sheets</button>
+        </div>
       </div>
     </div>
 
@@ -172,6 +215,7 @@
     document.getElementById("btnExportar").addEventListener("click", exportar);
     document.getElementById("btnLimpar").addEventListener("click", limpar);
     document.getElementById("pesquisa").addEventListener("input", renderTabela);
+    document.getElementById("btnEnviarGoogle").addEventListener("click", enviarParaGoogleSheets);
 
     function importarArquivo(e){
       const arquivo = e.target.files[0];
@@ -202,8 +246,17 @@
           document.getElementById("btnExportar").disabled = false;
           document.getElementById("btnLimpar").disabled = false;
           document.getElementById("pesquisa").disabled = false;
+          document.getElementById("btnEnviarGoogle").disabled = false;
+          document.getElementById("dataReferencia").disabled = false;
           document.getElementById("status").textContent =
             arquivo.name + " — " + numero.format(linhas.length) + " linhas processadas.";
+          
+          // Definir data padrão
+          const hoje = new Date();
+          const dia = String(hoje.getDate()).padStart(2, '0');
+          const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+          const ano = hoje.getFullYear();
+          document.getElementById("dataReferencia").value = `${dia}/${mes}/${ano}`;
         }catch(err){
           alert("Não foi possível processar o arquivo.\n\n" + err.message);
           document.getElementById("status").textContent = "Erro na importação.";
@@ -434,14 +487,100 @@
       XLSX.writeFile(wb,"Fechamento_Estoque_Clientes.xlsx");
     }
 
+    function enviarParaGoogleSheets(){
+      const dataReferencia = document.getElementById("dataReferencia").value.trim();
+
+      if(!dataReferencia){
+        mostrarMensagem("Informe a data de referência", "error");
+        return;
+      }
+
+      if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dataReferencia)){
+        mostrarMensagem("Formato de data inválido. Use DD/MM/YYYY", "error");
+        return;
+      }
+
+      if(consolidado.length === 0){
+        mostrarMensagem("Nenhum dado para enviar", "error");
+        return;
+      }
+
+      // Preparar dados para envio
+      const dadosParaEnvio = consolidado.map(c => ({
+        depositante: c.coddep,
+        cliente: c.descdep,
+        data_referencia: dataReferencia,
+        ocupacao: c.enderecos,
+        valor_estoque: c.valor
+      }));
+
+      document.getElementById("loading").classList.add("show");
+      document.getElementById("btnEnviarGoogle").disabled = true;
+
+      // Solicitar URL do Google Apps Script
+      const scriptUrl = prompt(
+        "Cole a URL do Google Apps Script:\n\n" +
+        "Exemplo: https://script.google.com/macros/s/SEU_SCRIPT_ID/usercontent\n\n" +
+        "Deixe em branco para usar a URL padrão."
+      );
+
+      if(scriptUrl === null){
+        document.getElementById("loading").classList.remove("show");
+        document.getElementById("btnEnviarGoogle").disabled = false;
+        return;
+      }
+
+      const url = scriptUrl || "https://script.google.com/macros/s/SEU_SCRIPT_ID/usercontent";
+
+      fetch(url, {
+        method: "POST",
+        body: JSON.stringify({
+          data_referencia: dataReferencia,
+          dados: dadosParaEnvio
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("loading").classList.remove("show");
+        
+        if(data.success){
+          mostrarMensagem(`✓ ${data.message}`, "success");
+          document.getElementById("dataReferencia").value = "";
+        }else{
+          mostrarMensagem(`✗ ${data.message}`, "error");
+          document.getElementById("btnEnviarGoogle").disabled = false;
+        }
+      })
+      .catch(error => {
+        document.getElementById("loading").classList.remove("show");
+        mostrarMensagem(`Erro ao enviar: ${error.message}`, "error");
+        document.getElementById("btnEnviarGoogle").disabled = false;
+      });
+    }
+
+    function mostrarMensagem(texto, tipo){
+      const messageDiv = document.getElementById("message");
+      messageDiv.textContent = texto;
+      messageDiv.className = `message show ${tipo}`;
+
+      if(tipo === "success"){
+        setTimeout(() => {
+          messageDiv.classList.remove("show");
+        }, 5000);
+      }
+    }
+
     function limpar(){
       linhas=[]; consolidado=[];
       document.getElementById("arquivo").value="";
       document.getElementById("pesquisa").value="";
+      document.getElementById("dataReferencia").value="";
       document.getElementById("pesquisa").disabled=true;
       document.getElementById("btnRecalcular").disabled=true;
       document.getElementById("btnExportar").disabled=true;
       document.getElementById("btnLimpar").disabled=true;
+      document.getElementById("btnEnviarGoogle").disabled=true;
+      document.getElementById("dataReferencia").disabled=true;
       document.getElementById("status").textContent="Nenhum arquivo importado.";
       document.getElementById("config").innerHTML='<div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>';
       document.getElementById("tbody").innerHTML='<tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr>';
