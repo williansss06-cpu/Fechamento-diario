@@ -433,8 +433,9 @@
           valor_estoque: c.valor
         }));
 
-          // Enviar para Google Apps Script
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          // Enviar para Google Apps Script com proxy CORS
+        const corsProxy = "https://cors-anywhere.herokuapp.com/";
+        const response = await fetch(corsProxy + GOOGLE_APPS_SCRIPT_URL, {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(dados)
