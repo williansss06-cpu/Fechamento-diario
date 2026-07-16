@@ -105,7 +105,7 @@
         <p>Consolidação por CODDEP, endereços únicos, DESTIPUA, pallets equivalentes e valor total de estoque.</p>
       </div>
       <div class="topbar-right">
-        <div class="version-badge" id="versionBadge" title="Versão do sistema">v1.0.0</div>
+        <div class="version-badge" id="versionBadge" title="Versão do sistema">v1.1.0</div>
         <button id="btnConfiguracoes" onclick="mostrarConfiguracoes()" style="display:none">⚙️ Configurações</button>
         <button onclick="fazerLogout()">🚪 Sair</button>
       </div>
@@ -248,8 +248,8 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script>
     // ===== CONSTANTES =====
-    const VERSAO_SISTEMA = "1.0.0";
-    const DATA_ATUALIZACAO = "16/07/2026";
+    const VERSAO_SISTEMA = "1.1.0";
+    const DATA_ATUALIZACAO = "16/07/2026 - 22:30";
     const SENHA_USUARIO = "Mundial@2026";
     const SENHA_ADMIN = "WS865607ws@";
     const URL_PLANILHA_PADRAO = "https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
@@ -434,8 +434,8 @@
         }));
 
           // Enviar para Google Apps Script com proxy CORS
-        const corsProxy = "https://cors-anywhere.herokuapp.com/";
-        const response = await fetch(corsProxy + GOOGLE_APPS_SCRIPT_URL, {
+        const corsProxy = "https://api.allorigins.win/raw?url=";
+        const response = await fetch(corsProxy + encodeURIComponent(GOOGLE_APPS_SCRIPT_URL), {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(dados)
