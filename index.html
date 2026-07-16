@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fechamento de Estoque por Cliente</title>
   <style>
+    /* Estilos idênticos aos anteriores – mantive o mesmo CSS */
     :root{
       --bg:#f3f6fa; --card:#ffffff; --primary:#123b63; --primary2:#1f5d8f;
       --text:#182433; --muted:#66778a; --border:#dbe3ec; --ok:#16855b;
@@ -13,7 +14,6 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
     
-    /* LOGIN */
     .login-container{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;z-index:9999}
     .login-container.hidden{display:none}
     .login-box{background:white;border-radius:16px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:400px;width:100%;text-align:center}
@@ -56,8 +56,6 @@
     .config-item label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
     .config-item .row{display:flex;gap:8px;align-items:center}
     .config-item input{width:110px}
-    .config-item .btn-delete{position:absolute;top:8px;right:8px;padding:4px 8px;font-size:11px;background:#ff6b6b;color:#fff;border:0;border-radius:4px;cursor:pointer}
-    .config-item .btn-delete:hover{background:#ff5252}
     .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px}
     table{width:100%;border-collapse:collapse;min-width:1080px;background:#fff}
     th{position:sticky;top:0;background:var(--primary);color:#fff;padding:11px 9px;text-align:left;font-size:13px;white-space:nowrap}
@@ -86,7 +84,7 @@
   </style>
 </head>
 <body>
-  <!-- LOGIN SCREEN -->
+  <!-- LOGIN -->
   <div class="login-container" id="loginContainer">
     <div class="login-box">
       <h1>🔐 Acesso Restrito</h1>
@@ -97,7 +95,7 @@
     </div>
   </div>
 
-  <!-- MAIN APPLICATION -->
+  <!-- MAIN -->
   <div id="mainApp" style="display: none">
     <div class="topbar">
       <div class="topbar-left">
@@ -113,16 +111,11 @@
 
     <div class="container">
       <div id="message" class="message"></div>
-      <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Processando...</p>
-      </div>
+      <div id="loading" class="loading"><div class="spinner"></div><p>Processando...</p></div>
 
       <!-- GOOGLE SHEETS PANEL -->
       <div class="panel" id="googleSheetsPanel">
-        <div class="section-title">
-          <h2>📊 Enviar para Google Sheets</h2>
-        </div>
+        <div class="section-title"><h2>📊 Enviar para Google Sheets</h2></div>
         <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px">
           <div>
             <label style="font-size: 13px; font-weight: 700; margin-bottom: 7px; display: block">Data de Referência (DD/MM/YYYY)</label>
@@ -133,44 +126,35 @@
           <button class="btn success" id="btnEnviarGoogleSheets" disabled>📤 Enviar para Google Sheets</button>
           <button class="btn secondary" id="btnLimparGoogleSheets">🗑️ Limpar data</button>
         </div>
-        <p class="hint" style="margin-top: 15px">Defina a data de referência. A URL da planilha é configurada no painel de administração.</p>
+        <p class="hint" style="margin-top: 15px">Defina a data de referência. A URL da planilha é fixa (configurada no sistema).</p>
       </div>
 
-      <!-- CONFIGURATION PANEL -->
+      <!-- CONFIGURATION PANEL (apenas para exibição, sem edição) -->
       <div class="panel" id="configPanel" style="display: none">
         <div class="section-title">
           <h2>⚙️ Configurações Administrativas</h2>
           <button class="btn secondary" onclick="ocultarConfiguracoes()">✕ Fechar</button>
         </div>
         
-        <!-- Google Sheets URL -->
         <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border)">
-          <h3 style="margin: 0 0 12px; font-size: 15px">📊 URL da Planilha Google Sheets</h3>
-          <input type="text" id="urlGoogleSheets" placeholder="https://docs.google.com/spreadsheets/d/..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px" />
-          <button class="btn secondary" onclick="salvarUrlGoogleSheets()">💾 Salvar URL</button>
-          <p class="hint">URL da planilha onde os dados serão enviados.</p>
+          <h3 style="margin: 0 0 12px; font-size: 15px">📊 URL da Planilha Google Sheets (fixa)</h3>
+          <input type="text" id="urlGoogleSheets" readonly style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #f5f5f5;" />
+          <p class="hint">Esta URL é fixa e definida pelo sistema.</p>
         </div>
         
-        <!-- Supabase Config -->
         <div>
-          <h3 style="margin: 0 0 12px; font-size: 15px">🔐 Configuração Supabase</h3>
+          <h3 style="margin: 0 0 12px; font-size: 15px">🔐 Configuração Supabase (fixa)</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px">
             <div>
               <label style="font-size: 13px; font-weight: 700; margin-bottom: 7px; display: block">URL da Supabase</label>
-              <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px" />
+              <input type="text" id="supabaseUrl" readonly style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #f5f5f5;" />
             </div>
             <div>
               <label style="font-size: 13px; font-weight: 700; margin-bottom: 7px; display: block">Chave Anon (Pública)</label>
-              <input type="password" id="supabaseKey" placeholder="eyJhbGc..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px" />
+              <input type="password" id="supabaseKey" readonly style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #f5f5f5;" />
             </div>
           </div>
-          <div style="display: flex; gap: 10px; margin-bottom: 15px">
-            <button class="btn secondary" onclick="alternarMostrarChave()">👁️ Mostrar chave</button>
-            <button class="btn success" onclick="testarConexaoSupabase()">🔗 Testar Conexão</button>
-            <button class="btn secondary" onclick="limparConfigSupabase()">🗑️ Limpar</button>
-          </div>
-          <div id="supabaseStatus" style="background: #f0f7ff; border: 1px solid #c5d9f1; border-radius: 10px; padding: 12px; margin-bottom: 14px; font-size: 12px; color: #1565c0">🔄 Não conectado</div>
-          <p class="hint">Suas credenciais são salvas apenas neste navegador (localStorage).</p>
+          <div id="supabaseStatus" style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px; padding: 12px; font-size: 12px; color: #2e7d32;">✅ Configurações fixas carregadas.</div>
         </div>
       </div>
 
@@ -192,6 +176,7 @@
         </p>
       </div>
 
+      <!-- KPIs -->
       <div class="cards">
         <div class="card"><div class="label">Clientes</div><div class="value" id="kpiClientes">0</div></div>
         <div class="card"><div class="label">Endereços únicos</div><div class="value" id="kpiEnderecos">0</div></div>
@@ -200,6 +185,7 @@
         <div class="card"><div class="label">Valor total do estoque</div><div class="value" id="kpiValor">R$ 0,00</div></div>
       </div>
 
+      <!-- CONFIGURAÇÃO DESTIPUA -->
       <div class="panel">
         <div class="section-title">
           <div>
@@ -213,6 +199,7 @@
         </div>
       </div>
 
+      <!-- TABELA DE FECHAMENTO -->
       <div class="panel">
         <div class="section-title">
           <div>
@@ -221,24 +208,12 @@
           </div>
           <input type="text" id="pesquisa" placeholder="Pesquisar CODDEP ou cliente" disabled />
         </div>
-
         <div class="table-wrap">
           <table id="tabela">
             <thead>
-              <tr>
-                <th style="width:70px">Detalhe</th>
-                <th>CODDEP</th>
-                <th>Cliente</th>
-                <th class="num">Endereços únicos</th>
-                <th class="num">Tipos DESTIPUA</th>
-                <th class="num">Pallets equivalentes</th>
-                <th class="num">Valor do estoque</th>
-              </tr>
+              <tr><th style="width:70px">Detalhe</th><th>CODDEP</th><th>Cliente</th><th class="num">Endereços únicos</th><th class="num">Tipos DESTIPUA</th><th class="num">Pallets equivalentes</th><th class="num">Valor do estoque</th></tr>
             </thead>
-            <tbody id="tbody">
-              <tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr>
-            </tbody>
-            <tfoot id="tfoot"></tfoot>
+            <tbody id="tbody"><tr><td colspan="7" class="empty">Importe uma planilha para gerar o fechamento.</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -247,29 +222,29 @@
 
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script>
-    // ===== CONSTANTES =====
+    // ===== CONSTANTES FIXAS =====
     const VERSAO_SISTEMA = "1.2.0";
     const DATA_ATUALIZACAO = "16/07/2026 - 23:00";
     const SENHA_USUARIO = "Mundial@2026";
     const SENHA_ADMIN = "WS865607ws@";
-    const URL_PLANILHA_PADRAO = "https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
-    const SUPABASE_ANON_KEY = "sb_publishable_CG8-Cflr7Wk0QyMJJyKwdw_GmYQ3FFn";
-    const SUPABASE_EDGE_FUNCTION_URL = "https://gdlgceoliupjinkgunxe.supabase.co/functions/v1/send_to_sheets";
-    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOIvSoQQH61PuC8huKD1rhjufRFw9DRee8IGtx2b6rEJgGyI4cny-x4MfKutlGedk/exec";
+    
+    // Configurações fixas (não armazenadas em localStorage)
+    const URL_GOOGLE_SHEETS_FIXA = "https://docs.google.com/spreadsheets/d/1ejjwQdBwkKzKJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
+    const SUPABASE_URL_FIXA = "https://gdlgceoiupjinkgxunxe.supabase.co";
+    const SUPABASE_ANON_KEY_FIXA = "sb_publishable_CG8-Cflr7Wk0QyMJJyKwdw_GmYQ3FFn";
+    
+    // Edge Function URL (baseada na SUPABASE_URL_FIXA)
+    const SUPABASE_EDGE_FUNCTION_URL = `${SUPABASE_URL_FIXA}/functions/v1/send_to_sheets`;
+    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOIvSoQQH61PuC8huKD1rhjufRFw9DRee8IGtx2b6rEJgGyI4cny-x4MfKutlGedk/exec"; // mantido, mas não usado no front-end
 
     let linhas = [];
     let consolidado = [];
-    let fatores = {}; // será carregado do Supabase
+    let fatores = {};
     let nivelAcesso = null;
 
-    // ===== INICIALIZAÇÃO DO SISTEMA =====
-    console.log(`%c🚀 Fechamento de Estoque por Cliente v${VERSAO_SISTEMA}`, "color: #123b63; font-size: 16px; font-weight: bold;");
-    console.log(`%cÚltima atualização: ${DATA_ATUALIZACAO}`, "color: #66778a; font-size: 12px;");
-    console.log(`%cSistema pronto para uso!`, "color: #16855b; font-size: 12px;");
-    
+    // ===== HELPERS =====
     const moeda = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
     const numero = new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2});
-
     const normalizarTexto = v => String(v ?? "").trim();
     const normalizarCabecalho = v => normalizarTexto(v).toUpperCase().replace(/\s+/g,"");
     const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -294,41 +269,26 @@
       return mapa;
     }
 
-    // ===== SUPABASE HELPERS =====
+    // ===== SUPABASE (fatores) =====
     function getSupabaseConfig() {
-      const url = localStorage.getItem("supabase_url");
-      const key = localStorage.getItem("supabase_key");
-      if (!url || !key) throw new Error("Configuração Supabase não encontrada. Configure no painel administrativo.");
-      return { url, key };
+      // Agora retorna as constantes fixas
+      return { url: SUPABASE_URL_FIXA, key: SUPABASE_ANON_KEY_FIXA };
     }
 
-    // Carrega os fatores da tabela configuracao_pallets
     async function carregarFatores() {
       const configDiv = document.getElementById("config");
       configDiv.innerHTML = '<div class="empty">Carregando configurações...</div>';
-      
       try {
         const { url, key } = getSupabaseConfig();
         const response = await fetch(`${url}/rest/v1/configuracao_pallets?select=destipua,fator`, {
-          headers: {
-            'apikey': key,
-            'Authorization': `Bearer ${key}`
-          }
+          headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
         });
         if (!response.ok) throw new Error(`Erro ao carregar fatores (${response.status})`);
-        
         const data = await response.json();
         fatores = {};
-        data.forEach(item => {
-          fatores[item.destipua] = item.fator;
-        });
-        
-        // Atualiza a interface de configuração
+        data.forEach(item => fatores[item.destipua] = item.fator);
         montarConfiguracao();
-        // Recalcula se já houver dados importados
-        if (linhas.length > 0) {
-          processar();
-        }
+        if (linhas.length > 0) processar();
         mostrarMensagem('Configurações carregadas do Supabase.', 'success');
       } catch (error) {
         configDiv.innerHTML = `<div class="empty">❌ ${escapeHtml(error.message)}</div>`;
@@ -336,11 +296,9 @@
       }
     }
 
-    // Salva (UPSERT) um fator no Supabase
     async function salvarFator(destipua, fator) {
       try {
         const { url, key } = getSupabaseConfig();
-        // Usa on_conflict para fazer UPSERT na coluna destipua
         const response = await fetch(`${url}/rest/v1/configuracao_pallets?on_conflict=destipua`, {
           method: 'POST',
           headers: {
@@ -352,8 +310,6 @@
           body: JSON.stringify({ destipua, fator })
         });
         if (!response.ok) throw new Error(`Erro ao salvar fator (${response.status})`);
-        
-        // Atualiza objeto local
         fatores[destipua] = fator;
         mostrarMensagem(`Fator para "${destipua}" salvo com sucesso.`, 'success');
       } catch (error) {
@@ -384,21 +340,22 @@
       document.getElementById("loginContainer").classList.add("hidden");
       document.getElementById("mainApp").style.display = "block";
       
-      // Carrega configurações locais
-      carregarConfigSupabase();
-      carregarUrlGoogleSheets();
-      
-      // Carrega os fatores do Supabase (assíncrono)
-      carregarFatores().then(() => {
-        // Se já houver dados importados, processar novamente
-        if (linhas.length > 0) {
-          processar();
-        }
-      });
-      
-      // Habilita campos de data e botão de envio
+      // Preenche os campos com valores fixos (readonly)
+      document.getElementById("urlGoogleSheets").value = URL_GOOGLE_SHEETS_FIXA;
+      document.getElementById("supabaseUrl").value = SUPABASE_URL_FIXA;
+      document.getElementById("supabaseKey").value = SUPABASE_ANON_KEY_FIXA;
+      document.getElementById("supabaseStatus").textContent = "✅ Configurações fixas carregadas.";
+      document.getElementById("supabaseStatus").style.background = "#e8f5e9";
+      document.getElementById("supabaseStatus").style.borderColor = "#a5d6a7";
+
+      // Habilita validação do botão de envio
       document.getElementById("dataReferencia").addEventListener("input", validarCamposGoogleSheets);
       validarCamposGoogleSheets();
+      
+      // Carrega fatores do Supabase
+      carregarFatores().then(() => {
+        if (linhas.length > 0) processar();
+      });
     }
 
     function fazerLogout(){
@@ -409,109 +366,20 @@
       document.getElementById("loginError").style.display = "none";
     }
 
-    // ===== CONFIGURAÇÕES (URL, credenciais) =====
+    // ===== CONFIGURAÇÕES (apenas exibição) =====
     function mostrarConfiguracoes(){
       if(nivelAcesso !== "admin") return;
       document.getElementById("configPanel").style.display = "block";
     }
-
     function ocultarConfiguracoes(){
       document.getElementById("configPanel").style.display = "none";
-    }
-
-    function salvarUrlGoogleSheets(){
-      const url = document.getElementById("urlGoogleSheets").value.trim();
-      if(!url){
-        mostrarMensagem("Cole uma URL válida", "error");
-        return;
-      }
-      localStorage.setItem("url_google_sheets", url);
-      mostrarMensagem("✓ URL salva com sucesso!", "success");
-    }
-
-    function carregarUrlGoogleSheets(){
-      const urlSalva = localStorage.getItem("url_google_sheets");
-      document.getElementById("urlGoogleSheets").value = urlSalva || URL_PLANILHA_PADRAO;
-    }
-
-    function carregarConfigSupabase(){
-      const url = localStorage.getItem("supabase_url");
-      const key = localStorage.getItem("supabase_key");
-      if(url) document.getElementById("supabaseUrl").value = url;
-      if(key) document.getElementById("supabaseKey").value = key;
-      
-      // Atualiza status
-      if (url && key) {
-        document.getElementById("supabaseStatus").textContent = "✅ Configuração presente. Clique em 'Testar Conexão' para verificar.";
-        document.getElementById("supabaseStatus").style.background = "#e8f5e9";
-        document.getElementById("supabaseStatus").style.borderColor = "#a5d6a7";
-      } else {
-        document.getElementById("supabaseStatus").textContent = "🔄 Configuração ausente. Preencha os campos e teste a conexão.";
-        document.getElementById("supabaseStatus").style.background = "#f0f7ff";
-        document.getElementById("supabaseStatus").style.borderColor = "#c5d9f1";
-      }
-    }
-
-    function alternarMostrarChave(){
-      const campo = document.getElementById("supabaseKey");
-      campo.type = campo.type === "password" ? "text" : "password";
-    }
-
-    function testarConexaoSupabase(){
-      const url = document.getElementById("supabaseUrl").value.trim();
-      const key = document.getElementById("supabaseKey").value.trim();
-
-      if(!url || !key){
-        mostrarMensagem("Preencha URL e chave", "error");
-        return;
-      }
-
-      localStorage.setItem("supabase_url", url);
-      localStorage.setItem("supabase_key", key);
-
-      // Tenta fazer uma requisição simples para testar
-      fetch(`${url}/rest/v1/configuracao_pallets?limit=1`, {
-        headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`
-        }
-      })
-      .then(res => {
-        if (res.ok) {
-          document.getElementById("supabaseStatus").textContent = "✅ Conexão bem-sucedida!";
-          document.getElementById("supabaseStatus").style.background = "#e8f5e9";
-          document.getElementById("supabaseStatus").style.borderColor = "#a5d6a7";
-          mostrarMensagem("Conexão com Supabase OK", "success");
-          // Recarrega os fatores
-          carregarFatores();
-        } else {
-          throw new Error(`HTTP ${res.status}`);
-        }
-      })
-      .catch(err => {
-        document.getElementById("supabaseStatus").textContent = "❌ Falha na conexão: " + err.message;
-        document.getElementById("supabaseStatus").style.background = "#ffebee";
-        document.getElementById("supabaseStatus").style.borderColor = "#ef9a9a";
-        mostrarMensagem("Erro ao conectar: " + err.message, "error");
-      });
-    }
-
-    function limparConfigSupabase(){
-      document.getElementById("supabaseUrl").value = "";
-      document.getElementById("supabaseKey").value = "";
-      localStorage.removeItem("supabase_url");
-      localStorage.removeItem("supabase_key");
-      document.getElementById("supabaseStatus").textContent = "🔄 Não conectado";
-      document.getElementById("supabaseStatus").style.background = "#f0f7ff";
-      document.getElementById("supabaseStatus").style.borderColor = "#c5d9f1";
-      mostrarMensagem("Configuração Supabase limpa", "info");
     }
 
     // ===== GOOGLE SHEETS =====
     function validarCamposGoogleSheets(){
       const data = document.getElementById("dataReferencia").value.trim();
-      const url = localStorage.getItem("url_google_sheets");
-      document.getElementById("btnEnviarGoogleSheets").disabled = !data || !url;
+      // Agora a URL é sempre fixa, então só depende da data
+      document.getElementById("btnEnviarGoogleSheets").disabled = !data;
     }
 
     function limparCamposGoogleSheets(){
@@ -531,11 +399,8 @@
         return;
       }
 
-      const url = localStorage.getItem("url_google_sheets");
-      if(!url){
-        mostrarMensagem("Configure a URL da planilha nas configurações.", "error");
-        return;
-      }
+      // A URL da planilha é fixa, mas é usada apenas na Edge Function.
+      // Não precisamos validar novamente.
 
       document.getElementById("loading").classList.add("show");
       
@@ -552,8 +417,8 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-            "apikey": SUPABASE_ANON_KEY
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY_FIXA}`,
+            "apikey": SUPABASE_ANON_KEY_FIXA
           },
           body: JSON.stringify({ dados })
         });
@@ -583,7 +448,6 @@
     document.getElementById("pesquisa").addEventListener("input", renderTabela);
     document.getElementById("btnEnviarGoogleSheets").addEventListener("click", enviarGoogleSheets);
     document.getElementById("btnLimparGoogleSheets").addEventListener("click", limparCamposGoogleSheets);
-    document.getElementById("dataReferencia").addEventListener("input", validarCamposGoogleSheets);
     document.getElementById("passwordInput").addEventListener("keypress", (e) => {
       if(e.key === "Enter") verificarSenha();
     });
@@ -610,7 +474,6 @@
             valor: parseValorBR(r[col.VALORTOTAL])
           })).filter(r => r.coddep);
 
-          // Monta a configuração com os tipos encontrados (usando fatores já carregados)
           montarConfiguracao();
           processar();
 
@@ -639,9 +502,7 @@
       }
 
       tipos.forEach(tipo => {
-        // Se o tipo não existir em fatores, usa 1 como padrão (mas não salva automaticamente)
         const valorInicial = (fatores[tipo] !== undefined) ? fatores[tipo] : 1;
-
         const item = document.createElement("div");
         item.className = "config-item";
         item.innerHTML = `
@@ -660,12 +521,8 @@
           const novoValor = Math.max(0, Number(ev.target.value) || 0);
           try {
             await salvarFator(tipo, novoValor);
-            // Após salvar, recalcula os dados
-            if (linhas.length > 0) {
-              processar();
-            }
+            if (linhas.length > 0) processar();
           } catch (error) {
-            // Reverte o valor no input para o anterior se houve erro
             const valorAnterior = fatores[tipo] !== undefined ? fatores[tipo] : 1;
             ev.target.value = valorAnterior;
           }
@@ -675,7 +532,6 @@
 
     function processar(){
       const clientes = new Map();
-
       linhas.forEach(r => {
         if(!clientes.has(r.coddep)){
           clientes.set(r.coddep,{
@@ -686,12 +542,10 @@
             tipos:new Map()
           });
         }
-
         const c = clientes.get(r.coddep);
         if(!c.descdep && r.descdep) c.descdep = r.descdep;
         if(r.etique) c.enderecos.add(r.etique);
         c.valor += r.valor;
-
         if(!c.tipos.has(r.destipua)) c.tipos.set(r.destipua,new Set());
         if(r.etique) c.tipos.get(r.destipua).add(r.etique);
       });
@@ -702,7 +556,6 @@
           const fator = Number(fatores[tipo] ?? 1);
           return {tipo,qtd,fator,pallets:qtd*fator};
         }).sort((a,b)=>a.tipo.localeCompare(b.tipo,"pt-BR"));
-
         return {
           coddep:c.coddep,
           descdep:c.descdep,
@@ -724,7 +577,6 @@
       const totalEnd = consolidado.reduce((s,c)=>s+c.enderecos,0);
       const totalPallets = consolidado.reduce((s,c)=>s+c.pallets,0);
       const totalValor = consolidado.reduce((s,c)=>s+c.valor,0);
-
       document.getElementById("kpiClientes").textContent = numero.format(consolidado.length);
       document.getElementById("kpiEnderecos").textContent = numero.format(totalEnd);
       document.getElementById("kpiTipos").textContent = numero.format(todosTipos.size);
@@ -737,10 +589,8 @@
       const dados = consolidado.filter(c =>
         !termo || c.coddep.toLowerCase().includes(termo) || c.descdep.toLowerCase().includes(termo)
       );
-
       const tb = document.getElementById("tbody");
       tb.innerHTML = "";
-
       if(!dados.length){
         tb.innerHTML = '<tr><td colspan="7" class="empty">Nenhum cliente encontrado.</td></tr>';
       }else{
@@ -754,7 +604,6 @@
             <td class="num">${numero.format(c.tipos)}</td>
             <td class="num">${numero.format(c.pallets)}</td>
             <td class="num">${moeda.format(c.valor)}</td>`;
-          // Toggle detalhes ao clicar na linha (ou no botão)
           tr.addEventListener("click", () => {
             const detalheRow = document.getElementById("detail-" + idx);
             if(detalheRow) detalheRow.style.display = detalheRow.style.display === "none" ? "table-row" : "none";
@@ -816,7 +665,7 @@
       setTimeout(() => msg.classList.remove("show"), 4000);
     }
 
-    // ===== INICIALIZAÇÃO =====
+    // Inicialização
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loginContainer").classList.remove("hidden");
     });
