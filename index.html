@@ -255,17 +255,15 @@
     const URL_PLANILHA_PADRAO = "https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
     const SUPABASE_ANON_KEY = "sb_publishable_CG8-Cflr7Wk0QyMJJyKwdw_GmYQ3FFn";
     const SUPABASE_EDGE_FUNCTION_URL = "https://gdlgceoliupjinkgunxe.supabase.co/functions/v1/send_to_sheets";
-    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOIvSoQQH61PuC8huKD1rhjufRFw9DRee8IGtx2b6rEJgGyI4cny-x4MfKutlGedk/exec";
 
     let linhas = [];
     let consolidado = [];
-    let fatores = {}; // será preenchido do Supabase
+    let fatores = {}; // carregado do Supabase
     let nivelAcesso = null;
 
-    // ===== INICIALIZAÇÃO DO SISTEMA =====
+    // ===== INICIALIZAÇÃO =====
     console.log(`%c🚀 Fechamento de Estoque por Cliente v${VERSAO_SISTEMA}`, "color: #123b63; font-size: 16px; font-weight: bold;");
     console.log(`%cÚltima atualização: ${DATA_ATUALIZACAO}`, "color: #66778a; font-size: 12px;");
-    console.log(`%cSistema pronto para uso!`, "color: #16855b; font-size: 12px;");
     
     const moeda = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
     const numero = new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2});
@@ -299,7 +297,7 @@
       const url = localStorage.getItem("supabase_url");
       const key = localStorage.getItem("supabase_key");
       if (!url || !key) {
-        console.warn("Supabase não configurado. As configurações de DESTIPUA não serão carregadas.");
+        console.warn("Supabase não configurado.");
         document.getElementById("supabaseStatus").textContent = "⚠️ Supabase não configurado";
         return;
       }
@@ -313,19 +311,15 @@
         const data = await response.json();
 
         if (data.length === 0) {
-          // Criar registros padrão
           await criarConfiguracoesPadrao();
-          // Recarregar
           return carregarConfiguracoesDestipua();
         }
 
-        // Popular o objeto fatores
         fatores = {};
         data.forEach(item => {
           fatores[item.destipua] = item.pallets_por_endereco;
         });
 
-        // Atualizar interface
         montarConfiguracao();
         document.getElementById("supabaseStatus").textContent = "✅ Configurações carregadas do Supabase";
         console.log("Configurações DESTIPUA carregadas:", fatores);
@@ -361,7 +355,7 @@
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
-        const response = await fetch(endpoint, {
+        await fetch(endpoint, {
           method: "POST",
           headers: {
             "apikey": key,
@@ -371,9 +365,6 @@
           },
           body: JSON.stringify(payload)
         });
-        if (!response.ok) {
-          console.warn(`Falha ao criar registro para ${destipua}: ${response.status}`);
-        }
       }
       console.log("Registros padrão criados.");
     }
@@ -424,7 +415,6 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
-        // Atualizar local
         fatores[tipo] = valor;
         console.log(`Configuração salva: ${tipo} = ${valor}`);
       } catch (err) {
@@ -456,9 +446,8 @@
       document.getElementById("mainApp").style.display = "block";
       carregarConfigSupabase();
       carregarUrlGoogleSheets();
-      // Carregar configurações do Supabase (assíncrono)
+      // Carregar configurações do Supabase
       carregarConfiguracoesDestipua().then(() => {
-        // Se já houver dados importados, processar novamente para usar os fatores carregados
         if (linhas.length > 0) processar();
       });
     }
@@ -520,7 +509,6 @@
       localStorage.setItem("supabase_url", url);
       localStorage.setItem("supabase_key", key);
 
-      // Testar carregando configurações
       carregarConfiguracoesDestipua().then(() => {
         document.getElementById("supabaseStatus").textContent = "✅ Conectado com sucesso!";
         mostrarMensagem("Credenciais Supabase salvas e configurações carregadas", "success");
@@ -537,7 +525,6 @@
       localStorage.removeItem("supabase_key");
       document.getElementById("supabaseStatus").textContent = "🔄 Não conectado";
       mostrarMensagem("Configuração Supabase limpa", "info");
-      // Recarregar sem dados
       fatores = {};
       montarConfiguracao();
     }
@@ -623,13 +610,13 @@
       if(e.key === "Enter") verificarSenha();
     });
 
-    function importarArquivo(e){
+    async function importarArquivo(e){
       const arquivo = e.target.files[0];
       if(!arquivo) return;
       document.getElementById("status").textContent = "Lendo arquivo...";
       const reader = new FileReader();
 
-      reader.onload = evt => {
+      reader.onload = async (evt) => {
         try{
           const wb = XLSX.read(evt.target.result,{type:"array",cellDates:true});
           const ws = wb.Sheets[wb.SheetNames[0]];
@@ -649,11 +636,9 @@
           const tiposUnicos = [...new Set(linhas.map(x => x.destipua))];
           for (const tipo of tiposUnicos) {
             if (!fatores.hasOwnProperty(tipo)) {
-              // Criar no banco com valor padrão 1
               await salvarConfiguracaoDestipua(tipo, 1);
             }
           }
-          // Recarregar configurações para garantir que fatores inclua os novos tipos
           await carregarConfiguracoesDestipua();
           
           montarConfiguracao();
@@ -674,9 +659,7 @@
     }
 
     function montarConfiguracao(){
-      // Coletar todos os tipos presentes nas linhas e os que estão em fatores
       const tiposSet = new Set(linhas.map(x => x.destipua));
-      // Também incluir tipos que estão em fatores mas não nas linhas (para exibir todos)
       Object.keys(fatores).forEach(t => tiposSet.add(t));
       const tipos = [...tiposSet].sort((a,b)=>a.localeCompare(b,"pt-BR"));
       const area = document.getElementById("config");
@@ -705,11 +688,8 @@
         inp.addEventListener("change", async (ev) => {
           const tipo = decodeURIComponent(ev.target.dataset.tipo);
           const novoValor = Math.max(0, Number(ev.target.value) || 0);
-          // Salvar no Supabase
           await salvarConfiguracaoDestipua(tipo, novoValor);
-          // Atualizar local
           fatores[tipo] = novoValor;
-          // Recalcular a tabela com os novos fatores
           processar();
         });
       });
