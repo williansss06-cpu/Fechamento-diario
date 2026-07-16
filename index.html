@@ -204,12 +204,12 @@
         <div class="section-title">
           <div>
             <h2>Configuração de pallets por DESTIPUA</h2>
-            <div class="hint">Informe quantos pallets cada endereço desse tipo representa. A configuração fica salva no banco de dados (Supabase) e é compartilhada com todos.</div>
+            <div class="hint">Informe quantos pallets cada endereço desse tipo representa. A configuração é salva no Supabase e compartilhada com todos os usuários.</div>
           </div>
           <button class="btn secondary" id="btnAdicionarDestipua" style="display:none">+ Adicionar novo</button>
         </div>
         <div id="config" class="config-grid">
-          <div class="empty">Importe uma planilha para carregar os tipos de DESTIPUA.</div>
+          <div class="empty">Carregando configurações...</div>
         </div>
       </div>
 
@@ -255,15 +255,17 @@
     const URL_PLANILHA_PADRAO = "https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
     const SUPABASE_ANON_KEY = "sb_publishable_CG8-Cflr7Wk0QyMJJyKwdw_GmYQ3FFn";
     const SUPABASE_EDGE_FUNCTION_URL = "https://gdlgceoliupjinkgunxe.supabase.co/functions/v1/send_to_sheets";
+    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOIvSoQQH61PuC8huKD1rhjufRFw9DRee8IGtx2b6rEJgGyI4cny-x4MfKutlGedk/exec";
 
     let linhas = [];
     let consolidado = [];
-    let fatores = {}; // carregado do Supabase
+    let fatores = {}; // será carregado do Supabase
     let nivelAcesso = null;
 
-    // ===== INICIALIZAÇÃO =====
+    // ===== INICIALIZAÇÃO DO SISTEMA =====
     console.log(`%c🚀 Fechamento de Estoque por Cliente v${VERSAO_SISTEMA}`, "color: #123b63; font-size: 16px; font-weight: bold;");
     console.log(`%cÚltima atualização: ${DATA_ATUALIZACAO}`, "color: #66778a; font-size: 12px;");
+    console.log(`%cSistema pronto para uso!`, "color: #16855b; font-size: 12px;");
     
     const moeda = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
     const numero = new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2});
@@ -292,134 +294,71 @@
       return mapa;
     }
 
-    // ===== FUNÇÕES SUPABASE =====
-    async function carregarConfiguracoesDestipua() {
+    // ===== SUPABASE HELPERS =====
+    function getSupabaseConfig() {
       const url = localStorage.getItem("supabase_url");
       const key = localStorage.getItem("supabase_key");
-      if (!url || !key) {
-        console.warn("Supabase não configurado.");
-        document.getElementById("supabaseStatus").textContent = "⚠️ Supabase não configurado";
-        return;
-      }
+      if (!url || !key) throw new Error("Configuração Supabase não encontrada. Configure no painel administrativo.");
+      return { url, key };
+    }
 
+    // Carrega os fatores da tabela configuracao_pallets
+    async function carregarFatores() {
+      const configDiv = document.getElementById("config");
+      configDiv.innerHTML = '<div class="empty">Carregando configurações...</div>';
+      
       try {
-        const endpoint = `${url}/rest/v1/configuracoes_destipua?select=*`;
-        const response = await fetch(endpoint, {
-          headers: { "apikey": key, "Authorization": `Bearer ${key}` }
+        const { url, key } = getSupabaseConfig();
+        const response = await fetch(`${url}/rest/v1/configuracao_pallets?select=destipua,fator`, {
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`
+          }
         });
-        if (!response.ok) throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        if (!response.ok) throw new Error(`Erro ao carregar fatores (${response.status})`);
+        
         const data = await response.json();
-
-        if (data.length === 0) {
-          await criarConfiguracoesPadrao();
-          return carregarConfiguracoesDestipua();
-        }
-
         fatores = {};
         data.forEach(item => {
-          fatores[item.destipua] = item.pallets_por_endereco;
+          fatores[item.destipua] = item.fator;
         });
-
+        
+        // Atualiza a interface de configuração
         montarConfiguracao();
-        document.getElementById("supabaseStatus").textContent = "✅ Configurações carregadas do Supabase";
-        console.log("Configurações DESTIPUA carregadas:", fatores);
-      } catch (err) {
-        console.error("Erro ao carregar configurações:", err);
-        document.getElementById("supabaseStatus").textContent = "❌ Erro ao carregar: " + err.message;
-        mostrarMensagem("Erro ao carregar configurações do Supabase: " + err.message, "error");
-      }
-    }
-
-    async function criarConfiguracoesPadrao() {
-      const url = localStorage.getItem("supabase_url");
-      const key = localStorage.getItem("supabase_key");
-      if (!url || !key) throw new Error("Supabase não configurado");
-
-      const padroes = [
-        "ITEMS FORA DE PADRÃO",
-        "PALETE COM CINTA",
-        "PALETE AÉREO",
-        "PALETE PADRÃO",
-        "PALLETS MULTINÍVEIS",
-        "POSIÇÃO DUPLA",
-        "SUBNÍVEL ALTU. 80CM",
-        "TRANSPORTE"
-      ];
-
-      const endpoint = `${url}/rest/v1/configuracoes_destipua`;
-      for (const destipua of padroes) {
-        const payload = {
-          destipua,
-          pallets_por_endereco: 1,
-          ativo: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "apikey": key,
-            "Authorization": `Bearer ${key}`,
-            "Content-Type": "application/json",
-            "Prefer": "return=minimal"
-          },
-          body: JSON.stringify(payload)
-        });
-      }
-      console.log("Registros padrão criados.");
-    }
-
-    async function salvarConfiguracaoDestipua(tipo, valor) {
-      const url = localStorage.getItem("supabase_url");
-      const key = localStorage.getItem("supabase_key");
-      if (!url || !key) {
-        mostrarMensagem("Supabase não configurado. Não foi possível salvar.", "error");
-        return;
-      }
-
-      try {
-        // Verificar se já existe
-        const searchEndpoint = `${url}/rest/v1/configuracoes_destipua?destipua=eq.${encodeURIComponent(tipo)}&select=id`;
-        const searchRes = await fetch(searchEndpoint, {
-          headers: { "apikey": key, "Authorization": `Bearer ${key}` }
-        });
-        if (!searchRes.ok) throw new Error("Erro ao verificar existência");
-        const data = await searchRes.json();
-
-        const payload = {
-          pallets_por_endereco: valor,
-          updated_at: new Date().toISOString()
-        };
-        let method, finalEndpoint;
-
-        if (data.length > 0) {
-          const id = data[0].id;
-          finalEndpoint = `${url}/rest/v1/configuracoes_destipua?id=eq.${id}`;
-          method = "PATCH";
-        } else {
-          finalEndpoint = `${url}/rest/v1/configuracoes_destipua`;
-          method = "POST";
-          payload.destipua = tipo;
-          payload.ativo = true;
-          payload.created_at = new Date().toISOString();
+        // Recalcula se já houver dados importados
+        if (linhas.length > 0) {
+          processar();
         }
+        mostrarMensagem('Configurações carregadas do Supabase.', 'success');
+      } catch (error) {
+        configDiv.innerHTML = `<div class="empty">❌ ${escapeHtml(error.message)}</div>`;
+        mostrarMensagem('Erro ao carregar configurações: ' + error.message, 'error');
+      }
+    }
 
-        const res = await fetch(finalEndpoint, {
-          method: method,
+    // Salva (UPSERT) um fator no Supabase
+    async function salvarFator(destipua, fator) {
+      try {
+        const { url, key } = getSupabaseConfig();
+        // Usa on_conflict para fazer UPSERT na coluna destipua
+        const response = await fetch(`${url}/rest/v1/configuracao_pallets?on_conflict=destipua`, {
+          method: 'POST',
           headers: {
-            "apikey": key,
-            "Authorization": `Bearer ${key}`,
-            "Content-Type": "application/json",
-            "Prefer": "return=minimal"
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ destipua, fator })
         });
-        if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
-        fatores[tipo] = valor;
-        console.log(`Configuração salva: ${tipo} = ${valor}`);
-      } catch (err) {
-        console.error("Erro ao salvar configuração:", err);
-        mostrarMensagem("Erro ao salvar: " + err.message, "error");
+        if (!response.ok) throw new Error(`Erro ao salvar fator (${response.status})`);
+        
+        // Atualiza objeto local
+        fatores[destipua] = fator;
+        mostrarMensagem(`Fator para "${destipua}" salvo com sucesso.`, 'success');
+      } catch (error) {
+        mostrarMensagem('Erro ao salvar fator: ' + error.message, 'error');
+        throw error;
       }
     }
 
@@ -444,12 +383,22 @@
 
       document.getElementById("loginContainer").classList.add("hidden");
       document.getElementById("mainApp").style.display = "block";
+      
+      // Carrega configurações locais
       carregarConfigSupabase();
       carregarUrlGoogleSheets();
-      // Carregar configurações do Supabase
-      carregarConfiguracoesDestipua().then(() => {
-        if (linhas.length > 0) processar();
+      
+      // Carrega os fatores do Supabase (assíncrono)
+      carregarFatores().then(() => {
+        // Se já houver dados importados, processar novamente
+        if (linhas.length > 0) {
+          processar();
+        }
       });
+      
+      // Habilita campos de data e botão de envio
+      document.getElementById("dataReferencia").addEventListener("input", validarCamposGoogleSheets);
+      validarCamposGoogleSheets();
     }
 
     function fazerLogout(){
@@ -460,7 +409,7 @@
       document.getElementById("loginError").style.display = "none";
     }
 
-    // ===== CONFIGURAÇÕES =====
+    // ===== CONFIGURAÇÕES (URL, credenciais) =====
     function mostrarConfiguracoes(){
       if(nivelAcesso !== "admin") return;
       document.getElementById("configPanel").style.display = "block";
@@ -490,6 +439,17 @@
       const key = localStorage.getItem("supabase_key");
       if(url) document.getElementById("supabaseUrl").value = url;
       if(key) document.getElementById("supabaseKey").value = key;
+      
+      // Atualiza status
+      if (url && key) {
+        document.getElementById("supabaseStatus").textContent = "✅ Configuração presente. Clique em 'Testar Conexão' para verificar.";
+        document.getElementById("supabaseStatus").style.background = "#e8f5e9";
+        document.getElementById("supabaseStatus").style.borderColor = "#a5d6a7";
+      } else {
+        document.getElementById("supabaseStatus").textContent = "🔄 Configuração ausente. Preencha os campos e teste a conexão.";
+        document.getElementById("supabaseStatus").style.background = "#f0f7ff";
+        document.getElementById("supabaseStatus").style.borderColor = "#c5d9f1";
+      }
     }
 
     function alternarMostrarChave(){
@@ -509,11 +469,29 @@
       localStorage.setItem("supabase_url", url);
       localStorage.setItem("supabase_key", key);
 
-      carregarConfiguracoesDestipua().then(() => {
-        document.getElementById("supabaseStatus").textContent = "✅ Conectado com sucesso!";
-        mostrarMensagem("Credenciais Supabase salvas e configurações carregadas", "success");
-      }).catch(err => {
+      // Tenta fazer uma requisição simples para testar
+      fetch(`${url}/rest/v1/configuracao_pallets?limit=1`, {
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${key}`
+        }
+      })
+      .then(res => {
+        if (res.ok) {
+          document.getElementById("supabaseStatus").textContent = "✅ Conexão bem-sucedida!";
+          document.getElementById("supabaseStatus").style.background = "#e8f5e9";
+          document.getElementById("supabaseStatus").style.borderColor = "#a5d6a7";
+          mostrarMensagem("Conexão com Supabase OK", "success");
+          // Recarrega os fatores
+          carregarFatores();
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      })
+      .catch(err => {
         document.getElementById("supabaseStatus").textContent = "❌ Falha na conexão: " + err.message;
+        document.getElementById("supabaseStatus").style.background = "#ffebee";
+        document.getElementById("supabaseStatus").style.borderColor = "#ef9a9a";
         mostrarMensagem("Erro ao conectar: " + err.message, "error");
       });
     }
@@ -524,9 +502,9 @@
       localStorage.removeItem("supabase_url");
       localStorage.removeItem("supabase_key");
       document.getElementById("supabaseStatus").textContent = "🔄 Não conectado";
+      document.getElementById("supabaseStatus").style.background = "#f0f7ff";
+      document.getElementById("supabaseStatus").style.borderColor = "#c5d9f1";
       mostrarMensagem("Configuração Supabase limpa", "info");
-      fatores = {};
-      montarConfiguracao();
     }
 
     // ===== GOOGLE SHEETS =====
@@ -605,18 +583,18 @@
     document.getElementById("pesquisa").addEventListener("input", renderTabela);
     document.getElementById("btnEnviarGoogleSheets").addEventListener("click", enviarGoogleSheets);
     document.getElementById("btnLimparGoogleSheets").addEventListener("click", limparCamposGoogleSheets);
-    document.getElementById("dataReferencia").addEventListener("change", validarCamposGoogleSheets);
+    document.getElementById("dataReferencia").addEventListener("input", validarCamposGoogleSheets);
     document.getElementById("passwordInput").addEventListener("keypress", (e) => {
       if(e.key === "Enter") verificarSenha();
     });
 
-    async function importarArquivo(e){
+    function importarArquivo(e){
       const arquivo = e.target.files[0];
       if(!arquivo) return;
       document.getElementById("status").textContent = "Lendo arquivo...";
       const reader = new FileReader();
 
-      reader.onload = async (evt) => {
+      reader.onload = evt => {
         try{
           const wb = XLSX.read(evt.target.result,{type:"array",cellDates:true});
           const ws = wb.Sheets[wb.SheetNames[0]];
@@ -632,15 +610,7 @@
             valor: parseValorBR(r[col.VALORTOTAL])
           })).filter(r => r.coddep);
 
-          // Adicionar novos tipos ao Supabase (se não existirem)
-          const tiposUnicos = [...new Set(linhas.map(x => x.destipua))];
-          for (const tipo of tiposUnicos) {
-            if (!fatores.hasOwnProperty(tipo)) {
-              await salvarConfiguracaoDestipua(tipo, 1);
-            }
-          }
-          await carregarConfiguracoesDestipua();
-          
+          // Monta a configuração com os tipos encontrados (usando fatores já carregados)
           montarConfiguracao();
           processar();
 
@@ -659,9 +629,7 @@
     }
 
     function montarConfiguracao(){
-      const tiposSet = new Set(linhas.map(x => x.destipua));
-      Object.keys(fatores).forEach(t => tiposSet.add(t));
-      const tipos = [...tiposSet].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+      const tipos = [...new Set(linhas.map(x => x.destipua))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
       const area = document.getElementById("config");
       area.innerHTML = "";
 
@@ -671,13 +639,15 @@
       }
 
       tipos.forEach(tipo => {
-        const valor = fatores[tipo] !== undefined ? fatores[tipo] : 1;
+        // Se o tipo não existir em fatores, usa 1 como padrão (mas não salva automaticamente)
+        const valorInicial = (fatores[tipo] !== undefined) ? fatores[tipo] : 1;
+
         const item = document.createElement("div");
         item.className = "config-item";
         item.innerHTML = `
           <label>${escapeHtml(tipo)}</label>
           <div class="row">
-            <input type="number" min="0" step="0.01" value="${valor}"
+            <input type="number" min="0" step="0.01" value="${valorInicial}"
               data-tipo="${encodeURIComponent(tipo)}" />
             <span class="hint">pallet(s) por endereço</span>
           </div>`;
@@ -688,9 +658,17 @@
         inp.addEventListener("change", async (ev) => {
           const tipo = decodeURIComponent(ev.target.dataset.tipo);
           const novoValor = Math.max(0, Number(ev.target.value) || 0);
-          await salvarConfiguracaoDestipua(tipo, novoValor);
-          fatores[tipo] = novoValor;
-          processar();
+          try {
+            await salvarFator(tipo, novoValor);
+            // Após salvar, recalcula os dados
+            if (linhas.length > 0) {
+              processar();
+            }
+          } catch (error) {
+            // Reverte o valor no input para o anterior se houve erro
+            const valorAnterior = fatores[tipo] !== undefined ? fatores[tipo] : 1;
+            ev.target.value = valorAnterior;
+          }
         });
       });
     }
@@ -776,6 +754,7 @@
             <td class="num">${numero.format(c.tipos)}</td>
             <td class="num">${numero.format(c.pallets)}</td>
             <td class="num">${moeda.format(c.valor)}</td>`;
+          // Toggle detalhes ao clicar na linha (ou no botão)
           tr.addEventListener("click", () => {
             const detalheRow = document.getElementById("detail-" + idx);
             if(detalheRow) detalheRow.style.display = detalheRow.style.display === "none" ? "table-row" : "none";
