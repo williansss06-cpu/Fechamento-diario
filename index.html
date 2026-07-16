@@ -248,6 +248,7 @@
     const SENHA_USUARIO = "Mundial@2026";
     const SENHA_ADMIN = "WS865607ws@";
     const URL_PLANILHA_PADRAO = "https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
+    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzWe-ewPC9RiNdhoa_UTXqShL76Hq2Pt6o8nMnFrg4zf6BweM9HGxoRiA7cFyNBxduV/exec";
 
     let linhas = [];
     let consolidado = [];
@@ -422,8 +423,22 @@
           valor_estoque: c.valor
         }));
 
-        // Aqui você implementaria o envio real para Google Sheets via Apps Script
-        mostrarMensagem("✓ Dados preparados para envio! (Implementar integração com Google Apps Script)", "success");
+          // Enviar para Google Apps Script
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(dados)
+        });
+
+        const resultado = await response.json();
+        
+        if(resultado.success){
+          mostrarMensagem("✓ " + resultado.message, "success");
+          document.getElementById("dataReferencia").value = "";
+          validarCamposGoogleSheets();
+        } else {
+          mostrarMensagem("✗ Erro: " + resultado.message, "error");
+        }
         
       } catch(err){
         mostrarMensagem("Erro ao enviar: " + err.message, "error");
