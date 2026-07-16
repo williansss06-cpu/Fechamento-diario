@@ -105,7 +105,7 @@
         <p>Consolidação por CODDEP, endereços únicos, DESTIPUA, pallets equivalentes e valor total de estoque.</p>
       </div>
       <div class="topbar-right">
-        <div class="version-badge" id="versionBadge" title="Versão do sistema">v1.1.0</div>
+        <div class="version-badge" id="versionBadge" title="Versão do sistema">v1.2.0</div>
         <button id="btnConfiguracoes" onclick="mostrarConfiguracoes()" style="display:none">⚙️ Configurações</button>
         <button onclick="fazerLogout()">🚪 Sair</button>
       </div>
@@ -248,11 +248,13 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script>
     // ===== CONSTANTES =====
-    const VERSAO_SISTEMA = "1.1.0";
-    const DATA_ATUALIZACAO = "16/07/2026 - 22:30";
+    const VERSAO_SISTEMA = "1.2.0";
+    const DATA_ATUALIZACAO = "16/07/2026 - 23:00";
     const SENHA_USUARIO = "Mundial@2026";
     const SENHA_ADMIN = "WS865607ws@";
     const URL_PLANILHA_PADRAO = "https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
+    const SUPABASE_ANON_KEY = "sb_publishable_CG8-Cflr7Wk0QyMJJyKwdw_GmYQ3FFn";
+    const SUPABASE_EDGE_FUNCTION_URL = "https://gdlgceoliupjinkgunxe.supabase.co/functions/v1/send_to_sheets";
     const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOIvSoQQH61PuC8huKD1rhjufRFw9DRee8IGtx2b6rEJgGyI4cny-x4MfKutlGedk/exec";
 
     let linhas = [];
@@ -433,12 +435,15 @@
           valor_estoque: c.valor
         }));
 
-          // Enviar para Google Apps Script com proxy CORS
-        const corsProxy = "https://api.allorigins.win/raw?url=";
-        const response = await fetch(corsProxy + encodeURIComponent(GOOGLE_APPS_SCRIPT_URL), {
+          // Enviar para Google Apps Script via Supabase Edge Function
+        const response = await fetch(SUPABASE_EDGE_FUNCTION_URL, {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(dados)
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "apikey": SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({ dados })
         });
 
         const resultado = await response.json();
