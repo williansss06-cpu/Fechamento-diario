@@ -31,6 +31,8 @@
     .topbar-right{display:flex;gap:10px;align-items:center}
     .topbar-right button{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px}
     .topbar-right button:hover{background:rgba(255,255,255,.3)}
+    .version-badge{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:help;transition:all .3s}
+    .version-badge:hover{background:rgba(255,255,255,.3);transform:scale(1.05)}
     
     .container{max-width:1500px;margin:22px auto;padding:0 18px 40px}
     .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
@@ -103,6 +105,7 @@
         <p>Consolidação por CODDEP, endereços únicos, DESTIPUA, pallets equivalentes e valor total de estoque.</p>
       </div>
       <div class="topbar-right">
+        <div class="version-badge" id="versionBadge" title="Versão do sistema">v1.0.0</div>
         <button id="btnConfiguracoes" onclick="mostrarConfiguracoes()" style="display:none">⚙️ Configurações</button>
         <button onclick="fazerLogout()">🚪 Sair</button>
       </div>
@@ -245,6 +248,8 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script>
     // ===== CONSTANTES =====
+    const VERSAO_SISTEMA = "1.0.0";
+    const DATA_ATUALIZACAO = "16/07/2026";
     const SENHA_USUARIO = "Mundial@2026";
     const SENHA_ADMIN = "WS865607ws@";
     const URL_PLANILHA_PADRAO = "https://docs.google.com/spreadsheets/d/1ejjwQdBwKzkJvuFaKIHIfJxaRfDuRor8nkDHNL085j0/edit?usp=sharing";
@@ -255,6 +260,11 @@
     let fatores = JSON.parse(localStorage.getItem("fatores_destipua_v2") || "{}");
     let nivelAcesso = null;
 
+    // ===== INICIALIZAÇÃO DO SISTEMA =====
+    console.log(`%c🚀 Fechamento de Estoque por Cliente v${VERSAO_SISTEMA}`, "color: #123b63; font-size: 16px; font-weight: bold;");
+    console.log(`%cÚltima atualização: ${DATA_ATUALIZACAO}`, "color: #66778a; font-size: 12px;");
+    console.log(`%cSistema pronto para uso!`, "color: #16855b; font-size: 12px;");
+    
     const moeda = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
     const numero = new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2});
 
